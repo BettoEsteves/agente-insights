@@ -1,0 +1,37 @@
+# Arquivos de cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ambiente virtual
+venv/
+env/
+ENV/
+
+# Arquivos de dados
+*.csv
+*.xlsx
+*.xls
+*.json
+!requirements.json
+
+# Diretórios de saída
+output/
+logs/
+
+# Configurações de IDE
+.vscode/
+.idea/
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# Arquivos de ambiente e chaves
+.env
+*.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
