@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Agente Insights
 
 ## Instalação e Configuração
@@ -64,3 +65,6 @@ python setup_env.py
 ```powershell
 python insights.py
 ```
+=======
+# agente-insights
+>>>>>>> 7aa01adfc8dbbb78e5bc1d2fbe8f494c53eed67b
