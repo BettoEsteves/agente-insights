@@ -1,0 +1,47 @@
+2025-06-05 17:57:55,141 - INFO - ==================================================
+2025-06-05 17:57:55,142 - INFO - Iniciando teste final com todas as correções aplicadas...
+2025-06-05 17:57:55,142 - INFO - Data e hora: 2025-06-05 17:57:55
+2025-06-05 17:57:55,142 - INFO - ==================================================
+2025-06-05 17:57:57,653 - INFO - 1. Testando carregamento de dados...
+2025-06-05 17:57:58,281 - INFO - Dados carregados. Tipos de dados: <class 'dict'>
+2025-06-05 17:57:58,281 - INFO - Chaves no dicionário: dict_keys(['maturidade', 'alocacao', 'executivo'])
+2025-06-05 17:57:58,282 - INFO - 2. Testando funções de normalização de texto...
+2025-06-05 17:57:58,284 - INFO - Normalização de 'Benefícios' -> 'beneficios'
+2025-06-05 17:57:58,284 - INFO - Normalização de 'BENEFÍCIOS' -> 'beneficios'
+2025-06-05 17:57:58,284 - INFO - Normalização de 'beneficios' -> 'beneficios'
+2025-06-05 17:57:58,285 - INFO - Normalização de '  benefícios  ' -> 'beneficios'
+2025-06-05 17:57:58,285 - INFO - Normalização de 'benefícios!' -> 'beneficios'
+2025-06-05 17:57:58,285 - INFO - Alias normalizar_nome funciona corretamente: 'Benefícios!' -> 'beneficios'
+2025-06-05 17:57:58,285 - INFO - 3. Testando análise de alocação para tribo Benefícios...
+2025-06-05 17:57:58,287 - INFO - Tribos disponíveis: ['Habilitador' 'Semparar.com' 'Benefícios' 'Atendimento' 'Insurtech'
+ 'Super App' 'Tag' 'Fuel' 'Estacione' 'Abastece' 'Condomínios'
+ 'Sem Parar Mais' 'Vendas' 'MX' 'Urbano' 'Fintech' 'Colaborador'
+ 'Vale Pedágio' 'Ofertas Sinérgicas' 'Drive' 'Pool' 'JV - Caixa']
+2025-06-05 17:57:58,289 - INFO - Tribo Benefícios encontrada como: 'Benefícios'
+2025-06-05 17:57:58,290 - INFO - Coluna de percentual de alocação encontrada: percetageAllocation
+2025-06-05 17:57:58,299 - INFO - Processando coluna percetageAllocation
+2025-06-05 17:57:58,300 - INFO - Amostras de valores antes da conversão: ['100%', '50%', '100%', '100%', '100%']
+2025-06-05 17:57:58,303 - INFO - Valores após limpeza: ['100', '100', '100']
+2025-06-05 17:57:58,304 - INFO - Valores de percentual: min=5, max=100, mean=86.51785714285714
+2025-06-05 17:57:58,304 - INFO - Convertendo percentuais para decimal (0-1)
+2025-06-05 17:57:58,305 - INFO - Valores após normalização: min=0.05, max=1.0, mean=0.8651785714285715
+2025-06-05 17:57:58,308 - INFO - Análise de alocação concluída: 12 papéis encontrados
+2025-06-05 17:57:58,309 - INFO - Composição de squads: ['Foods, SVAs e Novos Produtos', 'Inception (App /  Atendimento Ominichanel / Novo PAT / Novos Canais / GTM)', 'La Casa de Papel', 'Poupador', 'VT + Operações']
+2025-06-05 17:57:58,309 - INFO - Alocação média: {'Foods, SVAs e Novos Produtos': 0.9375, 'Inception (App /  Atendimento Ominichanel / Novo PAT / Novos Canais / GTM)': 0.9363636363636364, 'La Casa de Papel': 0.88125, 'Poupador': 0.865, 'VT + Operações': 0.865625}
+2025-06-05 17:57:58,309 - INFO - Média de pessoas por squad: 10.6
+2025-06-05 17:57:58,309 - INFO - Pessoas em múltiplos squads: ['Dayana Miyuki Suzuki', 'Renata Aparecida Corbeta']
+2025-06-05 17:57:58,309 - INFO - 4. Testando análise de métricas ágeis...
+2025-06-05 17:57:58,310 - INFO - Match exato encontrado para issue_type: type
+2025-06-05 17:57:58,310 - INFO - Match exato encontrado para squad: squad
+2025-06-05 17:57:58,310 - INFO - Match exato encontrado para tribo: tribe
+2025-06-05 17:57:58,310 - INFO - Match parcial encontrado para data: startDate
+2025-06-05 17:57:58,310 - INFO - Match parcial encontrado para issue_id: allocationId
+2025-06-05 17:57:58,311 - INFO - Mapeamento final de colunas: {'issue_type': 'type', 'squad': 'squad', 'tribo': 'tribe', 'data': 'startDate', 'issue_id': 'allocationId'}
+2025-06-05 17:57:58,311 - INFO - Colunas não mapeadas: ['lead_time', 'cycle_time', 'status']
+2025-06-05 17:57:58,316 - INFO - Dados filtrados para tribo 'Benefícios': 102 registros
+2025-06-05 17:57:58,317 - WARNING - Coluna de status não encontrada, usando status artificial
+2025-06-05 17:57:58,345 - INFO - Métricas ágeis: {'metricas_gerais': {'throughput': 0.0, 'throughput_diario': 0.0, 'lead_time': None, 'wip': np.int64(102)}, 'metricas_por_triba': {'Benefícios': {'throughput': 0.0, 'throughput_diario': 0.0, 'lead_time': None, 'wip': np.int64(102), 'bug_ratio': 0.0}}, 'metricas_por_squad': {'VT + Operações': {'throughput': 0.0, 'throughput_diario': 0.0, 'lead_time': None, 'wip': np.int64(26), 'bug_ratio': 0.0}, 'La Casa de Papel': {'throughput': 0.0, 'throughput_diario': 0.0, 'lead_time': None, 'wip': np.int64(10), 'bug_ratio': 0.0}, 'Inception (App /  Atendimento Ominichanel / Novo PAT / Novos Canais / GTM)': {'throughput': 0.0, 'throughput_diario': 0.0, 'lead_time': None, 'wip': np.int64(20), 'bug_ratio': 0.0}, nan: {'throughput': 0, 'throughput_diario': 0, 'lead_time': None, 'wip': 0, 'bug_ratio': None}, 'Simule e Compre': {'throughput': 0.0, 'throughput_diario': 0.0, 'lead_time': None, 'wip': np.int64(9), 'bug_ratio': 0.0}, 'Foods, SVAs e Novos Produtos': {'throughput': 0.0, 'throughput_diario': 0.0, 'lead_time': None, 'wip': np.int64(15), 'bug_ratio': 0.0}, 'Poupador': {'throughput': 0.0, 'throughput_diario': 0.0, 'lead_time': None, 'wip': np.int64(17), 'bug_ratio': 0.0}}}
+2025-06-05 17:57:58,346 - WARNING - Throughput diário não encontrado nas métricas
+2025-06-05 17:57:58,346 - INFO - ==================================================
+2025-06-05 17:57:58,346 - INFO - Teste final concluído com sucesso!
+2025-06-05 17:57:58,347 - INFO - ==================================================

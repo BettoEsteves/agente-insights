@@ -1,0 +1,4 @@
+2025-06-06 09:34:57,426 - INFO - Backup criado: E:\Projeto\Agente_Insights\agenteinsights\backups\analise_insights.py.20250606_093457.bak
+2025-06-06 09:34:57,428 - INFO - Backup criado: E:\Projeto\Agente_Insights\backups\insights.py.20250606_093457.bak
+2025-06-06 09:34:57,432 - ERROR - Erro ao aplicar correções: invalid group reference 1 at position 7
+2025-06-06 09:34:57,434 - INFO - Arquivos restaurados dos backups após erro

@@ -1,0 +1,244 @@
+import os
+import sys
+import json
+import re
+import string
+from typing import Dict, Any, List, Optional, Union, Tuple
+import pandas as pd
+import logging
+import traceback
+from collections import Counter
+from unidecode import unidecode
+
+def normalizar_texto(texto):
+    # Normaliza um texto removendo acentos, espaços extras e convertendo para minúsculas
+    if not isinstance(texto, str):
+        return str(texto).lower()
+    
+    # Remover acentos
+    texto_sem_acentos = unidecode(texto)
+    
+    # Converter para minúsculo e remover espaços extras
+    texto_normalizado = texto_sem_acentos.lower().strip()
+    
+    # Remover caracteres especiais e substituir espaços por underscore
+    texto_normalizado = re.sub(r'[^a-z0-9\s]', '', texto_normalizado)
+    texto_normalizado = re.sub(r'\s+', '_', texto_normalizado)
+    
+    return texto_normalizado
+
+"""
+Correção Manual - Função mapear_estrutura_org
+=========================================
+Esta função corrigida deve substituir a função atual no arquivo analise_insights.py
+"""
+
+def mapear_estrutura_org(analises: Dict[str, Any]) -> Dict:
+    """Mapeia a estrutura organizacional a partir das análises"""
+    try:
+        estrutura = {
+            'tribos': {},
+            'total_squads': 0,
+            'total_pessoas': 0,
+            'papeis_total': {},
+            'roles': {},  # Adicionado para mapear papéis e suas descrições
+            'maturidades': {}  # Adicionado para armazenar dados de maturidade
+        }
+        
+        # Verificar se todos os dados necessários estão presentes
+        if not analises:
+            logging.warning("Dados de análise vazios ou inexistentes")
+            return estrutura
+            
+        # Extrair dados de alocação e maturidade
+        df_alocacao = analises.get('alocacao', pd.DataFrame())
+        df_maturidade = analises.get('maturidade', pd.DataFrame())
+        
+        if df_alocacao is None or df_alocacao.empty:
+            logging.warning("DataFrame de alocação vazio")
+            # Dados de exemplo para estrutura - permitir funcionamento mesmo sem dados
+            estrutura['tribos']['Exemplo'] = {
+                'squads': ['Squad 1', 'Squad 2'],
+                'total_pessoas': 10,
+                'papeis': {'Desenvolvedor': 5, 'PO': 1, 'QA': 2, 'Tech Lead': 2}
+            }
+            estrutura['total_squads'] = 2
+            estrutura['total_pessoas'] = 10
+            estrutura['papeis_total'] = {'Desenvolvedor': 5, 'PO': 1, 'QA': 2, 'Tech Lead': 2}
+            estrutura['roles'] = {
+                'Desenvolvedor': 'Responsável pelo desenvolvimento de código',
+                'PO': 'Product Owner, responsável pelo backlog do produto',
+                'QA': 'Quality Assurance, responsável pela qualidade',
+                'Tech Lead': 'Líder técnico do squad'
+            }
+            return estrutura
+            
+        # Verificar as colunas necessárias - buscar por variações nos nomes das colunas
+        colunas_mapeadas = {}
+        colunas_necessarias_base = ['tribe', 'squad', 'person', 'role']
+        colunas_alternativas = {
+            'tribe': ['tribe', 'tribo', 'Tribo', 'Tribe'],
+            'squad': ['squad', 'Squad', 'equipe', 'Equipe', 'time', 'Time'],
+            'person': ['person', 'pessoa', 'Pessoa', 'nome', 'Nome', 'colaborador', 'Colaborador'],
+            'role': ['role', 'papel', 'Papel', 'cargo', 'Cargo', 'funcao', 'Funcao', 'função', 'Função']
+        }
+        
+        # Tentar encontrar colunas alternativas
+        for col_base, alternativas in colunas_alternativas.items():
+            for alt in alternativas:
+                if alt in df_alocacao.columns:
+                    colunas_mapeadas[col_base] = alt
+                    break
+            
+        # Verificar colunas faltantes após tentativa de mapeamento
+        colunas_faltantes = [col for col in colunas_necessarias_base if col not in colunas_mapeadas]
+        
+        if colunas_faltantes:
+            logging.warning(f"Colunas necessárias ausentes mesmo após mapeamento: {colunas_faltantes}")
+            # Adicionar colunas vazias para evitar erros
+            for col in colunas_faltantes:
+                df_alocacao[col] = 'Indefinido'
+                colunas_mapeadas[col] = col
+        
+        # Usar colunas mapeadas        
+        tribe_col = colunas_mapeadas.get('tribe', 'tribe')
+        squad_col = colunas_mapeadas.get('squad', 'squad') 
+        person_col = colunas_mapeadas.get('person', 'person')
+        role_col = colunas_mapeadas.get('role', 'role')
+        
+        # Normalizar valores para evitar duplicações por diferenças de capitalização/acentos
+        df_alocacao['tribe_norm'] = df_alocacao[tribe_col].apply(lambda x: unidecode(str(x).lower()))
+        df_alocacao['squad_norm'] = df_alocacao[squad_col].apply(lambda x: unidecode(str(x).lower()))
+                
+        # Mapear tribos e squads
+        for tribo, tribo_norm in zip(df_alocacao[tribe_col].unique(), df_alocacao['tribe_norm'].unique()):
+            if pd.isna(tribo) or not tribo:
+                continue
+                
+            df_tribo = df_alocacao[df_alocacao['tribe_norm'] == tribo_norm]
+            
+            # Usar nome original, não normalizado
+            estrutura['tribos'][tribo] = {
+                'squads': list(df_tribo[squad_col].unique()),
+                'total_pessoas': len(df_tribo[person_col].unique()),
+                'papeis': dict(Counter(df_tribo[role_col])),
+                'nome_normalizado': tribo_norm  # Adicionar nome normalizado para busca
+            }
+        
+        # Calcular totais
+        estrutura['total_squads'] = len(df_alocacao[squad_col].unique())
+        estrutura['total_pessoas'] = len(df_alocacao[person_col].unique())
+        estrutura['papeis_total'] = dict(Counter(df_alocacao[role_col]))
+        
+        # Adicionar descrições de papéis
+        papeis_descricoes = {
+            'desenvolvedor': 'Responsável pelo desenvolvimento de código',
+            'po': 'Product Owner, responsável pelo backlog do produto',
+            'qa': 'Quality Assurance, responsável pela qualidade',
+            'tech lead': 'Líder técnico do squad',
+            'scrum master': 'Facilitador do processo ágil',
+            'agile master': 'Facilitador do processo ágil',
+            'ux': 'User Experience, responsável pela experiência do usuário',
+            'ui': 'User Interface, responsável pela interface do usuário',
+            'analista': 'Analista de negócios ou sistemas',
+            'arquiteto': 'Arquiteto de software ou soluções',
+            'gerente': 'Gerente de produto ou projeto',
+            'devops': 'Responsável pela integração entre desenvolvimento e operações',
+            'sre': 'Site Reliability Engineer, responsável pela confiabilidade',
+            'data scientist': 'Cientista de dados, responsável por análises avançadas',
+            'data engineer': 'Engenheiro de dados, responsável por pipelines de dados'
+        }
+          
+        # Mapear papéis encontrados para as descrições
+        for papel in estrutura['papeis_total'].keys():
+            papel_norm = unidecode(str(papel).lower())
+            for desc_key, desc in papeis_descricoes.items():
+                if desc_key in papel_norm or papel_norm in desc_key:
+                    estrutura['roles'][papel] = desc
+                    break
+            else:
+                estrutura['roles'][papel] = 'Função na organização'
+        
+        # Processar dados de maturidade se disponíveis
+        if df_maturidade is not None and not df_maturidade.empty:
+            if 'Tribo' in df_maturidade.columns and 'Maturidade' in df_maturidade.columns:
+                logging.info(f"Processando dados de maturidade das tribos. Total: {len(df_maturidade)} registros")
+                
+                # Validar dados de maturidade
+                registros_validos = df_maturidade.dropna(subset=['Tribo', 'Maturidade'])
+                if len(registros_validos) < len(df_maturidade):
+                    logging.warning(f"Descartados {len(df_maturidade) - len(registros_validos)} registros com valores nulos")
+                
+                # Criar mapeamento de tribos para facilitar busca por nome normalizado
+                nomes_tribos_normalizados = {}
+                for tribo in estrutura['tribos'].keys():
+                    tribo_norm = normalizar_texto(tribo)
+                    nomes_tribos_normalizados[tribo_norm] = tribo
+                
+                # Log do mapeamento de nomes normalizados
+                logging.debug(f"Mapeamento de nomes normalizados: {nomes_tribos_normalizados}")
+                
+                # Adicionar maturidade para cada tribo
+                tribos_processadas = set()
+                for _, row in registros_validos.iterrows():
+                    tribo_nome = row['Tribo']
+                    maturidade = row['Maturidade']
+                    
+                    # Log para debug
+                    logging.debug(f"Processando maturidade: Tribo={tribo_nome}, Maturidade={maturidade}")
+                    
+                    # Tentar encontrar tribo existente usando normalização
+                    tribo_norm = normalizar_texto(tribo_nome)
+                    
+                    # Primeiro, verificar se a tribo existe diretamente
+                    if tribo_nome in estrutura['tribos']:
+                        estrutura['tribos'][tribo_nome]['maturidade'] = float(maturidade)
+                        estrutura['maturidades'][tribo_nome] = float(maturidade)
+                        tribos_processadas.add(tribo_nome)
+                        logging.debug(f"Maturidade adicionada diretamente: {tribo_nome} = {maturidade}")
+                    
+                    # Caso contrário, tentar encontrar por nome normalizado
+                    elif tribo_norm in nomes_tribos_normalizados:
+                        tribo_key = nomes_tribos_normalizados[tribo_norm]
+                        estrutura['tribos'][tribo_key]['maturidade'] = float(maturidade)
+                        estrutura['maturidades'][tribo_key] = float(maturidade)
+                        tribos_processadas.add(tribo_key)
+                        logging.debug(f"Maturidade adicionada via normalização: {tribo_key} = {maturidade} (original: {tribo_nome})")
+                    
+                    # Se ainda não encontrou, criar um novo registro para a tribo
+                    else:
+                        estrutura['maturidades'][tribo_nome] = float(maturidade)
+                        # Se a tribo não existe na estrutura, adicionar com informações mínimas
+                        if tribo_nome not in estrutura['tribos']:
+                            estrutura['tribos'][tribo_nome] = {
+                                'squads': [],
+                                'total_pessoas': 0,
+                                'papeis': {},
+                                'maturidade': float(maturidade),
+                                'nome_normalizado': tribo_norm
+                            }
+                            tribos_processadas.add(tribo_nome)
+                            logging.debug(f"Nova tribo criada com maturidade: {tribo_nome} = {maturidade}")
+                
+                # Verificar tribos sem maturidade
+                tribos_sem_maturidade = set(estrutura['tribos'].keys()) - tribos_processadas
+                if tribos_sem_maturidade:
+                    logging.warning(f"Tribos sem maturidade: {tribos_sem_maturidade}")
+                
+                # Log das maturidades carregadas
+                logging.info(f"Maturidades carregadas: {estrutura['maturidades']}")
+        
+        return estrutura
+          
+    except Exception as e:
+        logging.error(f"Erro ao mapear estrutura organizacional: {str(e)}")
+        tb_str = traceback.format_exc()
+        logging.error(f"Traceback: {tb_str}")
+        return {
+            'tribos': {},
+            'total_squads': 0,
+            'total_pessoas': 0,
+            'papeis_total': {},
+            'roles': {},
+            'maturidades': {}
+        }

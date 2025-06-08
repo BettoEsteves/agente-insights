@@ -1,0 +1,205 @@
+"""
+Correção Manual - Função gerar_resposta_contextualizada
+===================================================
+Esta função corrigida deve substituir a função atual no arquivo analise_insights.py
+"""
+
+def gerar_resposta_contextualizada(query: str, entidade: str, dados: Dict, client: OpenAI) -> str:
+    """Gera resposta contextualizada usando OpenAI"""
+    try:
+        # Determinar o tipo de entidade para consulta (tribo, squad, geral)
+        tipo_entidade = None
+        if entidade:
+            nome_norm = unidecode(entidade.lower()) if entidade else ""
+            is_tribo = False
+            
+            # Estrutura organizacional
+            org_structure = dados.get('estrutura_organizacional', {})
+            tribos_info = org_structure.get('tribos', {})
+            
+            # Verificar se é uma tribo específica
+            if tribos_info and entidade in tribos_info:
+                tipo_entidade = 'tribo'
+                is_tribo = True
+            # Verificar se é um squad específico
+            elif entidade in [squad for tribo_info in tribos_info.values() 
+                                  if isinstance(tribo_info, dict) and 'squads' in tribo_info
+                                  for squad in tribo_info['squads']]:
+                tipo_entidade = 'squad'
+        
+        # Para casos onde tipo_entidade ainda não foi definido
+        if not tipo_entidade and entidade is not None:
+            if entidade.lower() == 'tribo':
+                tipo_entidade = 'tribo_geral'
+            elif entidade.lower() == 'squad':
+                tipo_entidade = 'squad_geral'
+        elif not tipo_entidade:
+            # Caso a entidade seja None, definir como análise geral
+            tipo_entidade = 'analise_geral'
+        
+        # Preparar contexto para a consulta
+        contexto = []
+        
+        # Adicionar detalhes específicos baseados no tipo de entidade
+        if tipo_entidade == 'tribo':
+            contexto.append(f"=== Informações sobre a Tribo: {entidade} ===")
+            
+            # Verificar se existe dados relevantes para a tribo
+            dados_cruzados = dados.get('dados_cruzados', pd.DataFrame())
+            if isinstance(dados_cruzados, pd.DataFrame) and not dados_cruzados.empty:
+                # Se tiver uma coluna de tribo, filtrar
+                if 'Tribo' in dados_cruzados.columns:
+                    dados_filtrados = dados_cruzados[dados_cruzados['Tribo'] == entidade]
+                    contexto.append(f"Total de registros para esta tribo: {len(dados_filtrados)}")
+                else:
+                    contexto.append("Dados disponíveis sem coluna 'Tribo' para filtragem.")
+        elif tipo_entidade == 'squad':
+            contexto.append(f"=== Informações sobre o Squad: {entidade} ===")
+            
+            # Identificar a tribo deste squad
+            for tribo, info in tribos_info.items():
+                if isinstance(info, dict) and 'squads' in info and entidade in info['squads']:
+                    contexto.append(f"Squad pertence à Tribo: {tribo}")
+                    break
+        
+        # Adicionar métricas relevantes se disponíveis        
+        for key, value in dados.items():
+            if key == 'metricas' and isinstance(value, dict):
+                contexto.append("=== Métricas Disponíveis ===")
+                
+                # Adiciona apenas métricas relevantes para evitar sobrecarga
+                for metrica, valor in value.items():
+                    if isinstance(valor, (int, float, str)):
+                        contexto.append(f"{metrica}: {valor}")
+                    elif isinstance(valor, dict) and len(valor) < 5:
+                        contexto.append(f"{metrica}: {valor}")
+                    elif isinstance(valor, dict):
+                        contexto.append(f"{metrica}: {list(valor.keys())[:3]}...")
+                
+                # Se houver muitas métricas, limitar
+                if len(value) > 10:
+                    contexto.append(f"... e mais {len(value) - 10} métricas disponíveis")
+        
+        # Adicionar dados cruzados se relevantes para a consulta
+        dados_cruzados = dados.get('dados_cruzados', pd.DataFrame())
+        if isinstance(dados_cruzados, pd.DataFrame) and not dados_cruzados.empty:
+            contexto.append("\n=== Dados Cruzados ===")
+            contexto.append(f"Total de registros: {len(dados_cruzados)}")
+            # Adicionar informações sobre as colunas disponíveis
+            if dados_cruzados.columns.size > 0:
+                contexto.append(f"Colunas disponíveis: {', '.join(dados_cruzados.columns[:10])}...")
+                
+                # Verificar se há colunas específicas que podem ser relevantes
+                # Colunas de tempo/prazo
+                prazo_cols = [col for col in dados_cruzados.columns if 'prazo' in col.lower() or 'time' in col.lower() or 'lead' in col.lower()]
+                if prazo_cols:
+                    for col in prazo_cols[:2]:
+                        if dados_cruzados[col].dtype in ['int64', 'float64'] and dados_cruzados[col].notna().sum() > 0:
+                            contexto.append(f"{col} (média): {dados_cruzados[col].mean():.2f}")
+                
+                # Colunas de esforço/complexidade/story points
+                esforco_cols = [col for col in dados_cruzados.columns if 'esforco' in col.lower() or 'points' in col.lower() or 'complex' in col.lower()]
+                if esforco_cols:
+                    for col in esforco_cols[:2]:
+                        if dados_cruzados[col].dtype in ['int64', 'float64'] and dados_cruzados[col].notna().sum() > 0:
+                            contexto.append(f"{col} (média): {dados_cruzados[col].mean():.2f}")
+    
+        # Se ainda não houver contexto, adicionar uma mensagem padrão
+        if not contexto:
+            contexto.append("Dados insuficientes para análise detalhada.")
+            contexto.append("Sugiro validar os arquivos de entrada ou realizar nova importação.")
+            
+        # Adicionar sempre uma base de análise com termos técnicos relevantes
+        contexto.append("=== Conceitos em Business Agility ===")
+        
+        # Adicionar explicação sobre os termos para enriquecer o contexto
+        contexto.append("Lead Time: tempo desde a criação da demanda até sua entrega.")
+        contexto.append("Cycle Time: tempo efetivo de trabalho em uma demanda.")
+        contexto.append("WIP (Work in Progress): quantidade de itens sendo trabalhados simultaneamente.")
+        contexto.append("Throughput: taxa de entrega de itens por período.")
+        contexto.append("Flow Efficiency: porcentagem do tempo total em que o item efetivamente teve trabalho realizado.")
+        contexto.append("Organizational Topologies: estrutura organizacional que influencia a eficiência dos times.")
+        
+        # Adicionar estrutura organizacional se disponível
+        org_structure = dados.get('estrutura_organizacional', {})
+        if isinstance(org_structure, dict) and org_structure:
+            contexto.append("=== Estrutura Organizacional ===")
+            
+            # Verificar informações sobre tribos na estrutura
+            if 'tribos' in org_structure and isinstance(org_structure['tribos'], dict):
+                tribos_info = org_structure['tribos']
+                # Se a entidade é uma tribo, adicionar informações específicas
+                if is_tribo and entidade and entidade.lower() in [t.lower() for t in tribos_info]:
+                    for tribo_nome, tribo_info in tribos_info.items():
+                        if entidade and unidecode(tribo_nome.lower()) == nome_norm:
+                            if isinstance(tribo_info, dict):
+                                for key, value in tribo_info.items():
+                                    if key != 'squads':  # Tratamos squads separadamente
+                                        contexto.append(f"{key}: {value}")
+                                
+                                # Adicionar informações sobre squads da tribo
+                                if 'squads' in tribo_info and isinstance(tribo_info['squads'], list):
+                                    squads_da_tribo = tribo_info['squads']
+                                    contexto.append(f"Squads na tribo: {len(squads_da_tribo)}")
+                                    if len(squads_da_tribo) <= 10:
+                                        contexto.append(f"Lista de squads: {', '.join(squads_da_tribo)}")
+                                    else:
+                                        contexto.append(f"Amostra de squads: {', '.join(squads_da_tribo[:5])}")
+                            break
+                else:
+                    # Informações gerais de tribos
+                    contexto.append(f"Número de tribos na organização: {len(tribos_info)}")
+                    
+            # Verificar informações sobre papéis na organização
+            if 'roles' in org_structure and isinstance(org_structure['roles'], dict):
+                roles_info = org_structure['roles']
+                contexto.append(f"Papéis na organização: {', '.join(roles_info.keys())}")
+            
+            # Verificar informações sobre maturidades
+            if 'maturidades' in org_structure and isinstance(org_structure['maturidades'], dict) and org_structure['maturidades']:
+                maturidades = org_structure['maturidades']
+                contexto.append(f"Maturidade disponível para {len(maturidades)} tribos")
+                
+                # Se for uma consulta sobre tribo específica, adicionar sua maturidade
+                if is_tribo and entidade in maturidades:
+                    contexto.append(f"Maturidade da tribo {entidade}: {maturidades[entidade]}")
+        
+        # Log de diagnóstico para verificar o que está sendo fornecido para a consulta
+        logging.debug(f"Entidade: {entidade}, Tipo identificado: {tipo_entidade}, Nome normalizado: {nome_norm if 'nome_norm' in locals() else 'não definido'}")
+        logging.debug(f"Número de itens no contexto: {len(contexto)}")
+        
+        # Gerar resposta com OpenAI
+        prompt = f"""
+        Consulta: {query}
+        
+        Contexto:
+        {chr(10).join(contexto)}
+        
+        Dados sobre entidade: {entidade}
+        Tipo de entidade: {tipo_entidade if tipo_entidade else "não identificado"}
+        
+        Por favor, forneça uma resposta objetiva e profissional baseada no contexto acima.
+        Se os dados forem insuficientes, indique isso claramente e sugira o que poderia ser feito para melhorar a qualidade da análise.
+        
+        Formate sua resposta em tópicos quando houver múltiplos aspectos a serem destacados.
+        Destaque insights relevantes sobre a entidade analisada.
+        """
+        
+        try:
+            completion = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "Você é um consultor especialista em Business Agility e análise de dados de equipes ágeis"},
+                    {"role": "user", "content": prompt}
+                ]
+            )            
+            return completion.choices[0].message.content
+        except Exception as api_error:
+            logging.error(f"Erro na API do OpenAI: {str(api_error)}")
+            return f"Desculpe, tive um problema ao processar sua consulta: {str(api_error)}\nTente novamente ou reformule sua pergunta."
+            
+    except Exception as e:
+        logging.error(f"Erro ao gerar resposta contextualizada: {str(e)}")
+        tb_str = traceback.format_exc()
+        logging.error(f"Traceback: {tb_str}")
+        return "Desculpe, ocorreu um erro ao processar sua consulta. Por favor, tente novamente com uma pergunta diferente."

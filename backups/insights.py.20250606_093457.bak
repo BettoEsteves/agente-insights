@@ -1,0 +1,68 @@
+"""
+Agente Insights - Módulo Principal
+=================================
+Versão: 1.5.2
+Release: 6
+Data: 05/06/2025
+
+Histórico:
+- 1.0.0 (Release 0): Versão inicial
+- 1.1.0 (Release 1): Adicionado sistema de feedback e logging
+- 1.2.0 (Release 2): Correção no processamento de dados e análise ML
+- 1.2.1 (Release 3): Corrigido problema no cruzamento de dados
+- 1.5.0 (Release 4): Implementado novo sistema de análise de maturidade
+- 1.5.1 (Release 5): Corrigido merge de tribos usando nomes ao invés de IDs
+- 1.5.2 (Release 6): Melhorias na identificação de entidades e tratamento de NoneType
+
+Descrição:
+Módulo principal que coordena o fluxo de execução do pipeline de análise.
+"""
+
+import logging
+from pathlib import Path
+from agenteinsights.analise_insights import executar_pipeline, chat_ia_loop
+from setup_env import configurar_ambiente
+
+def configurar_logging():
+    """Configura o sistema de logging"""
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler('agente_insights.log'),
+            logging.StreamHandler()
+        ]
+    )
+
+def main():    # Configurar logging
+    configurar_logging()
+    logging.info("Iniciando Agente Insights v1.5.2")
+    
+    # Verificar ambiente
+    logging.info("Verificando configuração do ambiente...")
+    if not configurar_ambiente():
+        logging.error("Falha na configuração do ambiente")
+        return
+    
+    try:
+        logging.info("Iniciando execução do pipeline principal...")
+        analises = executar_pipeline()
+        
+        if analises["status"] == "success":
+            logging.info("Pipeline executado com sucesso!")
+            print("\n=== Agente Insights v1.5.2 ===")
+            print("Pipeline concluído. Iniciando modo interativo.")
+            print("Digite 'sair' para encerrar o programa.")
+            print("===========================\n")
+            
+            chat_ia_loop(analises)
+        else:
+            logging.error(f"Erro no pipeline: {analises['mensagem']}")
+            print(f"\n[ERROR] {analises['mensagem']}")
+            
+    except Exception as e:
+        logging.exception("Erro fatal durante a execução")
+        print(f"\n[ERROR] Erro fatal: {str(e)}")
+
+if __name__ == "__main__":
+    main()

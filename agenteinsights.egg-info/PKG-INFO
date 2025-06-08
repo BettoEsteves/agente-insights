@@ -1,0 +1,82 @@
+Metadata-Version: 2.4
+Name: agenteinsights
+Version: 1.5.0
+Summary: Agente de Insights para Business Agility
+Author-email: Seu Nome <seu.email@dominio.com>
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Requires-Dist: pandas>=1.5.0
+Requires-Dist: numpy>=1.21.0
+Requires-Dist: scikit-learn>=1.0.0
+Requires-Dist: matplotlib>=3.5.0
+Requires-Dist: seaborn>=0.11.0
+Requires-Dist: python-docx>=0.8.11
+Requires-Dist: python-dotenv>=0.19.0
+Requires-Dist: openai>=1.0.0
+
+# Agente Insights
+
+## Instalação e Configuração
+
+1. Navegue até o diretório do projeto:
+
+```powershell
+cd E:\Projeto\Agente_Insights
+```
+
+2.Crie e ative um ambiente virtual:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\activate
+```
+
+3.Instale as dependências:
+
+```powershell
+pip install -r requirements.txt
+```
+
+4.Verifique a instalação:
+
+```powershell
+python -c "import pandas; import numpy; import matplotlib; print('Instalação OK!')"
+```
+
+## Estrutura de Arquivos
+
+Certifique-se que os seguintes arquivos estão nos diretórios corretos:
+
+```plaintext
+E:\Projeto\Agente_Insights\
+├── requirements.txt          # <- Novo arquivo
+├── insights.py              # <- Arquivo principal
+├── setup_env.py            
+└── agenteinsights\
+    ├── data\
+    │   ├── Alocacao.xlsx
+    │   ├── Executivo.xlsx
+    │   └── MaturidadeT.xlsx
+    └── analise_insights.py
+```
+
+## Execução
+
+1. Certifique-se que está no diretório correto e com ambiente virtual ativo:
+
+```powershell
+cd E:\Projeto\Agente_Insights
+.\.venv\Scripts\activate
+```
+
+2.Configure o ambiente:
+
+```powershell
+python setup_env.py
+```
+
+3.Execute o programa:
+
+```powershell
+python insights.py
+```

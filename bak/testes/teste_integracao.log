@@ -1,0 +1,114 @@
+2025-06-04 17:10:54,932 - INFO - Registros carregados:
+2025-06-04 17:10:54,933 - INFO - - Maturidade: 15 registros
+2025-06-04 17:10:54,933 - INFO - - Alocação: 1014 registros
+2025-06-04 17:10:54,933 - INFO - Iniciando cruzamento de dados...
+2025-06-04 17:10:54,933 - INFO - Padronizando nomes das tribos para merge...
+2025-06-04 17:10:54,939 - INFO - Colunas em maturidade: ['Chave_Tribo_Ano_Quarter', 'Chave_Tribo_Ano_Quarter_Psq_Maturidade', 'ID_Formulario', 'Ano', 'Quarter', 'ID_Tribo_Alocacao', 'Tribo', 'Maturidade', 'tribo_norm']
+2025-06-04 17:10:54,939 - INFO - Total de registros em maturidade: 15
+2025-06-04 17:10:54,939 - INFO - Colunas em alocacao: ['allocationId', 'number', 'person', 'personID', 'personEmail', 'tribeID', 'tribe', 'squadID', 'squad', 'role', 'roleID', 'percetageAllocation', 'startDate', 'endDate', 'active', 'type', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'tribe_norm']
+2025-06-04 17:10:54,941 - INFO - Total de registros em alocacao: 1014
+2025-06-04 17:10:54,941 - INFO - Colunas em executivo: []
+2025-06-04 17:10:54,942 - INFO - Total de registros em executivo: 0
+2025-06-04 17:10:54,944 - INFO - Merge realizado com sucesso. Shape: (945, 30)
+2025-06-04 17:10:54,944 - INFO - Total de tribos após merge: 15
+2025-06-04 17:10:54,944 - INFO - Tribos encontradas após merge: ['abastece', 'atendimento', 'beneficios', 'estacione', 'fuel', 'habilitador', 'insurtech', 'mx', 'sem parar mais', 'sempararcom', 'super app', 'tag', 'urbano', 'vale pedagio', 'vendas']
+2025-06-04 17:10:54,945 - INFO - Total de registros após merge: 945
+2025-06-04 17:10:54,945 - INFO - Criando coluna tribe_norm para filtragem consistente
+2025-06-04 17:10:54,948 - INFO - Buscando por tribo normalizada: 'beneficios'
+2025-06-04 17:10:54,949 - INFO - Filtrando por tribe_norm = 'beneficios'
+2025-06-04 17:10:54,949 - INFO - Registros após filtro de tribo: 102
+2025-06-04 17:10:54,950 - INFO - Registros após filtro de data: 56
+2025-06-04 17:10:54,950 - INFO - Coluna de percentual de alocação encontrada: percetageAllocation
+2025-06-04 17:10:54,950 - INFO - Processando coluna percetageAllocation
+2025-06-04 17:10:54,951 - INFO - Amostras de valores antes da conversão: ['100%', '100%', '100%', '100%', '100%']
+2025-06-04 17:10:54,952 - INFO - Valores após limpeza: ['100', '50', '100']
+2025-06-04 17:10:54,953 - INFO - Valores de percentual: min=5, max=100, mean=86.51785714285714
+2025-06-04 17:10:54,953 - INFO - Convertendo percentuais para decimal (0-1)
+2025-06-04 17:10:54,953 - INFO - Valores após normalização: min=0.05, max=1.0, mean=0.8651785714285715
+2025-06-04 17:10:54,960 - INFO - Colunas disponíveis: ['Chave_Tribo_Ano_Quarter', 'Chave_Tribo_Ano_Quarter_Psq_Maturidade', 'ID_Formulario', 'Ano', 'Quarter', 'ID_Tribo_Alocacao', 'Tribo', 'Maturidade']
+2025-06-04 17:10:54,960 - INFO - Total registros inicial: 15
+2025-06-04 17:10:54,960 - INFO - Tribo buscada (normalizada): 'beneficios'
+2025-06-04 17:10:54,960 - WARNING - Coluna tribe_norm indisponível, fazendo comparação direta
+2025-06-04 17:10:54,961 - ERROR - Erro ao analisar métricas ágeis: 'tribe'
+2025-06-04 17:10:54,966 - INFO - Criando coluna tribe_norm para filtragem consistente
+2025-06-04 17:10:54,969 - INFO - Buscando por tribo normalizada: 'vendas'
+2025-06-04 17:10:54,970 - INFO - Filtrando por tribe_norm = 'vendas'
+2025-06-04 17:10:54,970 - INFO - Registros após filtro de tribo: 71
+2025-06-04 17:10:54,971 - INFO - Registros após filtro de data: 31
+2025-06-04 17:10:54,971 - INFO - Coluna de percentual de alocação encontrada: percetageAllocation
+2025-06-04 17:10:54,971 - INFO - Processando coluna percetageAllocation
+2025-06-04 17:10:54,972 - INFO - Amostras de valores antes da conversão: ['100%', '100%', '100%', '75%', '50%']
+2025-06-04 17:10:54,973 - INFO - Valores após limpeza: ['100', '15', '20']
+2025-06-04 17:10:54,973 - INFO - Valores de percentual: min=15, max=100, mean=80.80645161290323
+2025-06-04 17:10:54,973 - INFO - Convertendo percentuais para decimal (0-1)
+2025-06-04 17:10:54,974 - INFO - Valores após normalização: min=0.15, max=1.0, mean=0.8080645161290323
+2025-06-04 17:10:54,978 - INFO - Colunas disponíveis: ['Chave_Tribo_Ano_Quarter', 'Chave_Tribo_Ano_Quarter_Psq_Maturidade', 'ID_Formulario', 'Ano', 'Quarter', 'ID_Tribo_Alocacao', 'Tribo', 'Maturidade']
+2025-06-04 17:10:54,978 - INFO - Total registros inicial: 15
+2025-06-04 17:10:54,978 - INFO - Tribo buscada (normalizada): 'vendas'
+2025-06-04 17:10:54,978 - WARNING - Coluna tribe_norm indisponível, fazendo comparação direta
+2025-06-04 17:10:54,979 - ERROR - Erro ao analisar métricas ágeis: 'tribe'
+2025-06-04 17:10:54,982 - INFO - Criando coluna tribe_norm para filtragem consistente
+2025-06-04 17:10:54,982 - INFO - Coluna de percentual de alocação encontrada: percetageAllocation
+2025-06-04 17:10:54,982 - INFO - Processando coluna percetageAllocation
+2025-06-04 17:10:54,983 - INFO - Amostras de valores antes da conversão: ['100%', 70, '33,5%', '75%', '80%']
+2025-06-04 17:10:54,983 - INFO - Valores após limpeza: ['100', '50', '75']
+2025-06-04 17:10:54,984 - INFO - Valores de percentual: min=25.0, max=100.0, mean=68.45
+2025-06-04 17:10:54,984 - INFO - Convertendo percentuais para decimal (0-1)
+2025-06-04 17:10:54,984 - INFO - Valores após normalização: min=0.25, max=1.0, mean=0.6845
+2025-06-04 17:13:20,171 - INFO - Registros carregados:
+2025-06-04 17:13:20,172 - INFO - - Maturidade: 15 registros
+2025-06-04 17:13:20,172 - INFO - - Alocação: 1014 registros
+2025-06-04 17:13:20,172 - INFO - Iniciando cruzamento de dados...
+2025-06-04 17:13:20,172 - INFO - Padronizando nomes das tribos para merge...
+2025-06-04 17:13:20,176 - INFO - Colunas em maturidade: ['Chave_Tribo_Ano_Quarter', 'Chave_Tribo_Ano_Quarter_Psq_Maturidade', 'ID_Formulario', 'Ano', 'Quarter', 'ID_Tribo_Alocacao', 'Tribo', 'Maturidade', 'tribo_norm']
+2025-06-04 17:13:20,177 - INFO - Total de registros em maturidade: 15
+2025-06-04 17:13:20,177 - INFO - Colunas em alocacao: ['allocationId', 'number', 'person', 'personID', 'personEmail', 'tribeID', 'tribe', 'squadID', 'squad', 'role', 'roleID', 'percetageAllocation', 'startDate', 'endDate', 'active', 'type', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'tribe_norm']
+2025-06-04 17:13:20,177 - INFO - Total de registros em alocacao: 1014
+2025-06-04 17:13:20,177 - INFO - Colunas em executivo: []
+2025-06-04 17:13:20,177 - INFO - Total de registros em executivo: 0
+2025-06-04 17:13:20,180 - INFO - Merge realizado com sucesso. Shape: (945, 30)
+2025-06-04 17:13:20,180 - INFO - Total de tribos após merge: 15
+2025-06-04 17:13:20,180 - INFO - Tribos encontradas após merge: ['abastece', 'atendimento', 'beneficios', 'estacione', 'fuel', 'habilitador', 'insurtech', 'mx', 'sem parar mais', 'sempararcom', 'super app', 'tag', 'urbano', 'vale pedagio', 'vendas']
+2025-06-04 17:13:20,180 - INFO - Total de registros após merge: 945
+2025-06-04 17:13:20,182 - INFO - Criando coluna tribe_norm para filtragem consistente
+2025-06-04 17:13:20,184 - INFO - Buscando por tribo normalizada: 'beneficios'
+2025-06-04 17:13:20,185 - INFO - Filtrando por tribe_norm = 'beneficios'
+2025-06-04 17:13:20,185 - INFO - Registros após filtro de tribo: 102
+2025-06-04 17:13:20,186 - INFO - Registros após filtro de data: 56
+2025-06-04 17:13:20,186 - INFO - Coluna de percentual de alocação encontrada: percetageAllocation
+2025-06-04 17:13:20,186 - INFO - Processando coluna percetageAllocation
+2025-06-04 17:13:20,187 - INFO - Amostras de valores antes da conversão: ['100%', '100%', '100%', '100%', '100%']
+2025-06-04 17:13:20,188 - INFO - Valores após limpeza: ['100', '50', '100']
+2025-06-04 17:13:20,188 - INFO - Valores de percentual: min=5, max=100, mean=86.51785714285714
+2025-06-04 17:13:20,188 - INFO - Convertendo percentuais para decimal (0-1)
+2025-06-04 17:13:20,189 - INFO - Valores após normalização: min=0.05, max=1.0, mean=0.8651785714285715
+2025-06-04 17:13:20,195 - INFO - Colunas disponíveis: ['Chave_Tribo_Ano_Quarter', 'Chave_Tribo_Ano_Quarter_Psq_Maturidade', 'ID_Formulario', 'Ano', 'Quarter', 'ID_Tribo_Alocacao', 'Tribo', 'Maturidade']
+2025-06-04 17:13:20,195 - INFO - Total registros inicial: 15
+2025-06-04 17:13:20,195 - INFO - Tribo buscada (normalizada): 'beneficios'
+2025-06-04 17:13:20,196 - WARNING - Coluna tribe_norm indisponível, fazendo comparação direta
+2025-06-04 17:13:20,196 - ERROR - Erro ao analisar métricas ágeis: 'tribe'
+2025-06-04 17:13:20,201 - INFO - Criando coluna tribe_norm para filtragem consistente
+2025-06-04 17:13:20,204 - INFO - Buscando por tribo normalizada: 'vendas'
+2025-06-04 17:13:20,205 - INFO - Filtrando por tribe_norm = 'vendas'
+2025-06-04 17:13:20,205 - INFO - Registros após filtro de tribo: 71
+2025-06-04 17:13:20,206 - INFO - Registros após filtro de data: 31
+2025-06-04 17:13:20,206 - INFO - Coluna de percentual de alocação encontrada: percetageAllocation
+2025-06-04 17:13:20,206 - INFO - Processando coluna percetageAllocation
+2025-06-04 17:13:20,206 - INFO - Amostras de valores antes da conversão: ['50%', '100%', '100%', '75%', '100%']
+2025-06-04 17:13:20,207 - INFO - Valores após limpeza: ['100', '15', '20']
+2025-06-04 17:13:20,208 - INFO - Valores de percentual: min=15, max=100, mean=80.80645161290323
+2025-06-04 17:13:20,208 - INFO - Convertendo percentuais para decimal (0-1)
+2025-06-04 17:13:20,209 - INFO - Valores após normalização: min=0.15, max=1.0, mean=0.8080645161290323
+2025-06-04 17:13:20,213 - INFO - Colunas disponíveis: ['Chave_Tribo_Ano_Quarter', 'Chave_Tribo_Ano_Quarter_Psq_Maturidade', 'ID_Formulario', 'Ano', 'Quarter', 'ID_Tribo_Alocacao', 'Tribo', 'Maturidade']
+2025-06-04 17:13:20,213 - INFO - Total registros inicial: 15
+2025-06-04 17:13:20,213 - INFO - Tribo buscada (normalizada): 'vendas'
+2025-06-04 17:13:20,213 - WARNING - Coluna tribe_norm indisponível, fazendo comparação direta
+2025-06-04 17:13:20,213 - ERROR - Erro ao analisar métricas ágeis: 'tribe'
+2025-06-04 17:13:20,216 - INFO - Criando coluna tribe_norm para filtragem consistente
+2025-06-04 17:13:20,216 - INFO - Coluna de percentual de alocação encontrada: percetageAllocation
+2025-06-04 17:13:20,216 - INFO - Processando coluna percetageAllocation
+2025-06-04 17:13:20,217 - INFO - Amostras de valores antes da conversão: ['100%', '75%', '90.5%', '60,5%', 70]
+2025-06-04 17:13:20,218 - INFO - Valores após limpeza: ['100', '50', '75']
+2025-06-04 17:13:20,218 - INFO - Valores de percentual: min=25.0, max=100.0, mean=68.45
+2025-06-04 17:13:20,218 - INFO - Convertendo percentuais para decimal (0-1)
+2025-06-04 17:13:20,219 - INFO - Valores após normalização: min=0.25, max=1.0, mean=0.6845

@@ -1,0 +1,1937 @@
+"""
+Agente Insights - Análises e Chat IA
+====================================
+Versão: 1.5.0
+Release: 5
+Data: 02/06/2025
+
+Descrição:
+Executa análises (descritiva, preditiva, diagnóstica) e fornece função para chat IA,
+onde o usuário pode consultar insights sobre tribos/squads, com respostas baseadas nos dados,
+gráficos e tabelas. Permite salvar o histórico do chat em DOCX.
+"""
+
+import pandas as pd
+import numpy as np
+import os
+import logging
+from sklearn.linear_model import LinearRegression
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
+import seaborn as sns
+from docx import Document
+from datetime import datetime
+from typing import Dict, Any, List, Tuple
+from dotenv import load_dotenv
+import openai
+from openai import OpenAI  # Adicione esta linha junto com os outros imports
+import unicodedata
+from collections import Counter
+import json
+import traceback
+from .config import *
+import re
+from unidecode import unidecode
+from pathlib import Path
+
+# Configurar logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Definir caminhos
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # Sobe um nível
+DATA_DIR = os.path.join(BASE_DIR, 'dados')  # Usa 'dados' em vez de 'data'
+OUTPUT_DIR = os.path.join(BASE_DIR, 'output')
+GRAFICOS_DIR = os.path.join(OUTPUT_DIR, 'graficos')
+RELATORIOS_DIR = os.path.join(OUTPUT_DIR, 'relatorios')
+
+# Criar diretórios necessários
+os.makedirs(DATA_DIR, exist_ok=True)
+os.makedirs(GRAFICOS_DIR, exist_ok=True)
+os.makedirs(RELATORIOS_DIR, exist_ok=True)
+
+# Caminhos para arquivos
+ARQUIVO_MATURIDADE = os.path.join(DATA_DIR, 'MaturidadeT.xlsx')
+ARQUIVO_ALOCACAO = os.path.join(DATA_DIR, 'Alocacao.xlsx')
+ARQUIVO_EXECUTIVO = os.path.join(DATA_DIR, 'Executivo.xlsx')
+
+def normalizar_coluna(col):
+    # Remove acentos, espaços e deixa minúsculo
+    col = unicodedata.normalize('NFKD', str(col)).encode('ASCII', 'ignore').decode('ASCII')
+    return col.strip().lower().replace(' ', '')
+
+def mapear_colunas(df, nomes_esperados):
+    # Cria um dicionário de {nome_normalizado: nome_original}
+    col_map = {normalizar_coluna(c): c for c in df.columns}
+    resultado = {}
+    for nome in nomes_esperados:
+        norm = normalizar_coluna(nome)
+        if norm in col_map:
+            resultado[nome] = col_map[norm]
+        else:
+            resultado[nome] = None
+    return resultado
+
+def carregar_dados():
+    """Carrega os dados dos arquivos Excel"""
+    try:
+        dados = {
+            'maturidade': pd.read_excel(ARQUIVO_MATURIDADE),
+            'alocacao': pd.read_excel(ARQUIVO_ALOCACAO),
+            'executivo': pd.read_excel(ARQUIVO_EXECUTIVO)
+        }
+        
+        # Log das colunas disponíveis
+        for nome, df in dados.items():
+            logging.debug(f"Colunas em {nome}: {df.columns.tolist()}")
+            
+        return dados
+        
+    except Exception as e:
+        logging.error(f"Erro ao carregar dados: {str(e)}")
+        raise
+
+def padronizar_ids(dados):
+    """Padroniza os nomes das tribos para permitir o merge correto"""
+    logging.info("Padronizando nomes das tribos para merge...")
+    
+    try:
+        # Verificar se dados é um DataFrame ou um dicionário com DataFrames
+        if isinstance(dados, pd.DataFrame):
+            # Se for um único DataFrame, aplicar a normalização diretamente
+            df = dados.copy()
+            
+            # Função para limpar e padronizar nomes
+            def limpar_nome(nome):
+                if pd.isna(nome):
+                    return ''
+                nome = str(nome).lower().strip()
+                # Remover acentos
+                nome = unidecode(nome)
+                # Remover caracteres especiais
+                nome = re.sub(r'[^a-z0-9\s]', '', nome)
+                # Substituir múltiplos espaços por um único
+                nome = re.sub(r'\s+', ' ', nome)
+                return nome.strip()
+            
+            # Verificar quais colunas podem conter nomes de tribos
+            colunas_tribo = [col for col in df.columns if 'tribe' in col.lower() or 'tribo' in col.lower()]
+            
+            # Aplicar normalização nas colunas identificadas
+            for col in colunas_tribo:
+                norm_col = f"{col}_norm"
+                df[norm_col] = df[col].apply(limpar_nome)
+                logging.info(f"Padronizado coluna {col} -> {norm_col}")
+                
+            return df
+        else:
+            # Caso original: é um dicionário com DataFrames
+            # Criar cópias para não modificar os originais
+            maturidade = dados['maturidade'].copy() if 'maturidade' in dados else pd.DataFrame()
+            alocacao = dados['alocacao'].copy() if 'alocacao' in dados else pd.DataFrame()
+            
+            # Função para limpar e padronizar nomes
+            def limpar_nome(nome):
+                if pd.isna(nome):
+                    return ''
+                nome = str(nome).lower().strip()
+                # Remover acentos
+                nome = unidecode(nome)
+                # Remover caracteres especiais
+                nome = re.sub(r'[^a-z0-9\s]', '', nome)
+                # Substituir múltiplos espaços por um único
+                nome = re.sub(r'\s+', ' ', nome)
+                return nome.strip()
+
+            # Padronizar nomes em Maturidade se existir e tiver a coluna 'Tribo'
+            if not maturidade.empty and 'Tribo' in maturidade.columns:
+                maturidade['nome_tribo_clean'] = maturidade['Tribo'].apply(limpar_nome)
+                logging.info(f"Nomes únicos em Maturidade: {maturidade['nome_tribo_clean'].unique().tolist()}")
+            
+            # Padronizar nomes em Alocação se existir e tiver a coluna 'tribe'
+            if not alocacao.empty and 'tribe' in alocacao.columns:
+                alocacao['nome_tribo_clean'] = alocacao['tribe'].apply(limpar_nome)
+                logging.info(f"Nomes únicos em Alocação: {alocacao['nome_tribo_clean'].unique().tolist()}")
+            
+            # Verificar nomes em comum se ambos os DataFrames têm as colunas necessárias
+            if (not maturidade.empty and 'nome_tribo_clean' in maturidade.columns and 
+                not alocacao.empty and 'nome_tribo_clean' in alocacao.columns):
+                nomes_maturidade = set(maturidade['nome_tribo_clean'].unique())
+                nomes_alocacao = set(alocacao['nome_tribo_clean'].unique())
+                nomes_comuns = nomes_maturidade.intersection(nomes_alocacao)
+                
+                logging.info(f"Total de nomes em comum: {len(nomes_comuns)}")
+                logging.info(f"Nomes em comum: {nomes_comuns}")
+            
+            # Atualizar DataFrames no dicionário
+            dados['maturidade'] = maturidade
+            dados['alocacao'] = alocacao
+            
+            return dados
+        
+    except Exception as e:
+        logging.error(f"Erro ao padronizar nomes: {str(e)}")
+        raise
+
+def cruzar_dados(dados):
+    """Cruza os dados dos diferentes DataFrames"""
+    try:
+        logging.info("Iniciando cruzamento de dados...")
+        
+        # Padronizar IDs primeiro
+        dados_padronizados = padronizar_ids(dados)
+        
+        # Log das colunas antes do merge
+        for nome, df in dados_padronizados.items():
+            logging.info(f"Colunas em {nome}: {df.columns.tolist()}")
+          # Merge usando as colunas padronizadas com nomes limpos
+        df_merged = dados_padronizados['maturidade'].merge(
+            dados_padronizados['alocacao'],
+            left_on='nome_tribo_clean',
+            right_on='nome_tribo_clean',
+            how='inner',
+            suffixes=('_mat', '_aloc')
+        )
+        
+        logging.info(f"Merge realizado com sucesso. Shape: {df_merged.shape}")
+        
+        # Validar resultado
+        if df_merged.empty:
+            raise ValueError("Merge resultou em DataFrame vazio")
+              # Log dos primeiros registros para verificação
+        logging.info("\nPrimeiros registros após merge:")
+        logging.info(f"\n{df_merged[['nome_tribo_clean', 'Tribo', 'Maturidade']].head()}")
+            
+        return df_merged
+        
+    except Exception as e:
+        logging.error(f"Erro no cruzamento de dados: {str(e)}")
+        raise
+
+def executar_analises(df: pd.DataFrame) -> Dict[str, Any]:
+    resultados = {}
+    # Análise descritiva
+    resultados['estatisticas'] = df.describe(include='all').to_dict()
+    # Análise preditiva (regressão)
+    num_cols = df.select_dtypes(include=[np.number]).columns
+    if len(num_cols) > 1:
+        X = df[num_cols[1:]].fillna(0)
+        y = df[num_cols[0]].fillna(0)
+        reg = LinearRegression().fit(X, y)
+        resultados['regressao'] = {
+            'coef': reg.coef_.tolist(),
+            'intercept': float(reg.intercept_),
+            'r2': reg.score(X, y)
+        }
+    else:
+        resultados['regressao'] = None
+    # Análise diagnóstica (clustering)
+    if len(num_cols) > 1:
+        X = df[num_cols].fillna(0)
+        kmeans = KMeans(n_clusters=3, random_state=42).fit(X)
+        resultados['clustering'] = {
+            'labels': kmeans.labels_.tolist(),
+            'centroids': kmeans.cluster_centers_.tolist(),
+            'inertia': float(kmeans.inertia_)
+        }
+    else:
+        resultados['clustering'] = None
+    resultados['status'] = 'success'
+    return resultados
+
+def gerar_graficos(df: pd.DataFrame, resultados: Dict[str, Any]):
+    # Exemplo: histograma da primeira coluna numérica
+    num_cols = df.select_dtypes(include=[np.number]).columns
+    if len(num_cols) > 0:
+        plt.figure(figsize=(8, 4))
+        sns.histplot(df[num_cols[0]].dropna())
+        plt.title(f'Histograma de {num_cols[0]}')
+        plt.savefig('output/graficos/histograma.png')
+        plt.close()
+
+def chat_ia_loop(analises: Dict[str, Any]):
+    """Chat IA com suporte a consultas dinâmicas sobre estrutura organizacional"""
+    try:
+        load_dotenv()
+        client = OpenAI()
+        
+        # Inicializar contexto da conversa
+        contexto_conversa = []
+        
+        # Mapear estrutura organizacional
+        estrutura = mapear_estrutura_org(analises)
+        
+        # Validar estrutura
+        if not estrutura['tribos']:
+            msg_erro = "Não foi possível carregar a estrutura organizacional. Verificar dados de entrada."
+            logging.error(msg_erro)
+            print(f"\n❌ {msg_erro}")
+            return
+        
+        # Preparar prompt base com informações da estrutura
+        sistema_base = {
+            "role": "system",
+            "content": f"""Você é um consultor sênior especializado em Business Agility e Analytics.
+            
+            # Estrutura Organizacional
+            - Total de Tribos: {len(estrutura['tribos'])}
+            - Total de Squads: {estrutura['total_squads']}
+            - Total de Pessoas: {estrutura['total_pessoas']}
+            
+            # Tribos Disponíveis
+            {chr(10).join(f"- {tribo}" for tribo in estrutura['tribos'].keys())}
+            
+            # Papéis na Organização
+            {chr(10).join(f"- {papel}: {qtd}" for papel, qtd in estrutura.get('papeis_total', {}).items())}            """
+        }
+        
+        print("\n📊 Consultor Executivo - Business Agility & Analytics")
+        print(f"\nEstrutura Atual:")
+        print(f"- {len(estrutura['tribos'])} Tribos")
+        print(f"- {estrutura['total_squads']} Squads")
+        print(f"- {estrutura['total_pessoas']} Pessoas")
+        print("\nExemplos de consultas:")
+        print("- 'análise da tribo [nome da tribo]'")
+        print("- 'composição do squad [nome do squad]'")
+        print("- 'distribuição de papéis na tribo [nome da tribo]'")
+        print("- 'métricas da organização'")
+        print("\nDigite 'sair' para encerrar")
+        
+        max_erros_consecutivos = 0
+        max_erros_totais = 0
+        while True:
+            try:
+                # Mecanismo de recuperação para evitar loops infinitos
+                if max_erros_consecutivos >= 3 or max_erros_totais >= 5:
+                    logging.error(f"Muitos erros na entrada. Consecutivos: {max_erros_consecutivos}, Totais: {max_erros_totais}. Encerrando chat.")
+                    print("\n❌ Muitos erros de entrada detectados. Encerrando o chat.")
+                    break
+                
+                try:
+                    print("\nVocê: ", end='', flush=True)
+                    query = input().strip()
+                    max_erros_consecutivos = 0  # Reset contador de erros consecutivos após entrada bem-sucedida
+                    
+                    # Log de sucesso na leitura de entrada
+                    logging.debug("Entrada do usuário lida com sucesso")
+                    
+                except EOFError:
+                    logging.warning("Erro EOF ao ler entrada. Tentando recuperar...")
+                    max_erros_consecutivos += 1
+                    max_erros_totais += 1
+                    print("\n⚠️ Erro ao ler entrada (EOF). Digite novamente ou 'sair' para encerrar.")
+                    # Pequena pausa para evitar ciclo muito rápido
+                    import time
+                    time.sleep(0.5)
+                    continue
+                
+                if query.lower() == "sair":
+                    break
+                
+                # Log da consulta recebida
+                logging.info(f"Consulta recebida: '{query}'")
+                
+                # Identificar entidade (tribo/squad) na query
+                entidade, nome = identificar_entidade_consulta(query, estrutura)
+                logging.info(f"Entidade identificada: '{entidade}', Nome: '{nome}'")
+                
+                # Preparar dados específicos da consulta
+                dados_consulta = preparar_dados_consulta(entidade, nome, estrutura, analises)
+                
+                # Gerar resposta contextualizada
+                resposta = gerar_resposta_contextualizada(query, entidade, dados_consulta, client)
+                
+                # Atualizar contexto da conversa
+                contexto_conversa.append(("Você", query))
+                contexto_conversa.append(("IA", resposta))
+                
+                print(f"\n🤖 IA: {resposta}\n")
+                
+            except Exception as e:
+                logging.error(f"Erro no chat: {str(e)}")
+                traceback.print_exc()
+                print(f"\n❌ Ops! Tive um problema: {str(e)}")
+        
+        return contexto_conversa
+    except Exception as e:
+        logging.error(f"Erro ao iniciar chat: {str(e)}")
+        traceback.print_exc()
+        print(f"\n❌ Erro ao iniciar chat: {str(e)}")
+
+def salvar_chat_docx(chat_log: List[tuple]):
+    doc = Document()
+    doc.add_heading('Chat de Insights - Agente Insights', 0)
+    for autor, msg in chat_log:
+        doc.add_paragraph(f"{autor}:", style='Heading 2')
+        doc.add_paragraph(msg)
+    caminho = f"output/relatorios/chat_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
+    doc.save(caminho)
+    print(f"Chat salvo em: {caminho}")
+
+def analisar_alocacao(dados: pd.DataFrame, tribo: str = None, squad: str = None) -> Dict:
+    """Analisa alocação de pessoas e papéis"""
+    try:
+        # Criar cópia dos dados
+        df = dados.copy() if not dados.empty else pd.DataFrame()
+        
+        # Verificar colunas necessárias base (sem coluna de percentual)
+        colunas_necessarias_base = ['endDate', 'role', 'squad', 'tribe', 'person']
+        
+        # Verificar variações da coluna de alocação percentual
+        coluna_percentual = None
+        for possivel_coluna in ['percentageAllocation', 'percetageAllocation', 'percentage', 'alocacao_percentual']:
+            if possivel_coluna in df.columns:
+                coluna_percentual = possivel_coluna
+                break
+        
+        # Log da coluna de percentual encontrada
+        if coluna_percentual:
+            logging.info(f"Coluna de percentual encontrada: {coluna_percentual}")
+        else:
+            logging.warning("Nenhuma coluna de percentual encontrada")
+            
+        # Verificar se temos as colunas base necessárias
+        if not all(col in df.columns for col in colunas_necessarias_base):
+            colunas_faltando = [col for col in colunas_necessarias_base if col not in df.columns]
+            logging.warning(f"Colunas base ausentes para análise de alocação: {colunas_faltando}")
+            return {
+                'papeis': {},
+                'alocacao_media': {},
+                'pessoas_multi_squad': [],
+                'composicao_squads': {},
+                'media_pessoas_squad': 0
+            }
+        
+        # Filtrar apenas alocações ativas (sem data de término ou data futura)
+        df = df[df['endDate'].isna() | (pd.to_datetime(df['endDate'], errors='coerce') > pd.Timestamp.now())]
+        
+        # Filtrar por tribo ou squad se especificado
+        if tribo:
+            df = df[df['tribe'] == tribo]
+        if squad:
+            df = df[df['squad'] == squad]
+            
+        # Log dos registros após filtros
+        logging.info(f"Registros após filtros de tribo/squad: {len(df)}")
+
+        # Preparar dados para análise
+        composicao_squads_agg = {}
+        
+        # Base para análise sem percentual
+        composicao_squads_agg['role'] = lambda x: dict(Counter(x))
+        
+        # Adicionar percentual se disponível, com conversão segura para numérico
+        if coluna_percentual:
+            # Converter percentuais para valores numéricos com segurança
+            try:
+                # Se for string com %, remover e converter para float
+                if df[coluna_percentual].dtype == 'object':
+                    logging.info(f"Processando coluna {coluna_percentual}")
+                    # Mostrar algumas amostras para debug
+                    sample_values = df[coluna_percentual].dropna().head(5).tolist()
+                    logging.info(f"Amostras de valores antes da conversão: {sample_values}")
+                    
+                    # Limpar e converter valores
+                    df[coluna_percentual] = df[coluna_percentual].astype(str).str.replace('%', '').str.replace(',', '.')
+                    df[coluna_percentual] = pd.to_numeric(df[coluna_percentual], errors='coerce')
+                    
+                    # Mostrar valores após limpeza para debug
+                    clean_values = df[coluna_percentual].dropna().head(3).tolist()
+                    logging.info(f"Valores após limpeza: {clean_values}")
+                    
+                    # Verificar valores inválidos (que viraram NaN)
+                    invalid_count = df[coluna_percentual].isna().sum()
+                    logging.info(f"Dados inválidos em {coluna_percentual}: {invalid_count} registros")
+                
+                # Calcular estatísticas básicas
+                if df[coluna_percentual].notna().any():
+                    min_val = df[coluna_percentual].min()
+                    max_val = df[coluna_percentual].max()
+                    mean_val = df[coluna_percentual].mean()
+                    logging.info(f"Valores de percentual: min={min_val}, max={max_val}, mean={mean_val}")
+                    
+                    # Converter para decimal (0-1) se os valores parecem ser percentuais (>1)
+                    if max_val > 1:
+                        logging.info(f"Convertendo percentuais para decimal (0-1)")
+                        df[coluna_percentual] = df[coluna_percentual] / 100
+                        logging.info(f"Valores após normalização: min={df[coluna_percentual].min()}, max={df[coluna_percentual].max()}, mean={df[coluna_percentual].mean()}")
+                
+                # Usar mean para agregação apenas se os valores são numéricos
+                composicao_squads_agg[coluna_percentual] = 'mean'
+                
+            except Exception as e:
+                logging.warning(f"Erro ao processar coluna percentual {coluna_percentual}: {str(e)}")
+                # Remover a coluna problemática
+                if coluna_percentual in df.columns:
+                    df = df.drop(coluna_percentual, axis=1)
+                coluna_percentual = None
+                
+        # Calcular métricas de alocação
+        analise = {
+            'papeis': df.groupby('role').size().to_dict() if len(df) > 0 else {},
+            'pessoas_multi_squad': df[df.groupby('person')['squad'].transform('size') > 1]['person'].unique().tolist() if len(df) > 0 else [],
+            'media_pessoas_squad': float(df.groupby('squad').size().mean()) if len(df) > 0 and 'squad' in df.columns else 0
+        }
+            
+        # Adicionar métricas de alocação percentual se disponível
+        if coluna_percentual and coluna_percentual in df.columns:
+            analise['alocacao_media'] = df.groupby('squad')[coluna_percentual].mean().to_dict() if len(df) > 0 else {}
+            
+            # Usar agregação segura para composição de squads
+            try:
+                analise['composicao_squads'] = df.groupby('squad').agg(composicao_squads_agg).to_dict() if len(df) > 0 else {}
+            except Exception as e:
+                logging.warning(f"Erro na agregação de composição de squads: {str(e)}")
+                # Fallback para composição sem percentual
+                analise['composicao_squads'] = df.groupby('squad').agg({'role': lambda x: dict(Counter(x))}).to_dict() if len(df) > 0 else {}
+        else:
+            analise['alocacao_media'] = {}
+            analise['composicao_squads'] = df.groupby('squad').agg({'role': lambda x: dict(Counter(x))}).to_dict() if len(df) > 0 else {}
+        
+        return analise
+        
+    except Exception as e:
+        logging.error(f"Erro ao analisar alocação: {str(e)}")
+        traceback.print_exc()
+        return {
+            'papeis': {},
+            'alocacao_media': {},
+            'pessoas_multi_squad': [],
+            'composicao_squads': {},
+            'media_pessoas_squad': 0
+        }
+
+def mapear_colunas_ageis(df):
+    """Mapeia colunas do dataframe para nomes padronizados"""
+    # Mapeamento expandido com mais variações comuns
+    mapeamento = {
+        'lead_time': ['LeadTime', 'lead_time', 'leadtime', 'tempo_total', 'lead time', 'tempo total'],
+        'cycle_time': ['CycleTime', 'cycle_time', 'cycletime', 'tempo_ciclo', 'cycle time', 'tempo ciclo'],
+        'data': ['DataRegistro', 'data_registro', 'data', 'date', 'created_at', 'data_criacao'],
+        'issue_type': ['TipoItem', 'tipo_item', 'type', 'issue_type', 'tipo', 'tipo_tarefa'],
+        'status': ['Status', 'status', 'estado', 'situacao'],
+        'issue_id': ['ID', 'id', 'numero', 'issue_key', 'chave'],
+        'squad': ['Squad', 'squad', 'team', 'equipe'],
+        'tribo': ['Tribe', 'tribo', 'Chave_Tribo_Ano_Quarter', 'tribe', 'tribo_nome']
+    }
+    
+    colunas_encontradas = {}
+    
+    # Primeiro tenta match exato
+    for nova_col, possiveis_nomes in mapeamento.items():
+        for nome in possiveis_nomes:
+            if nome in df.columns:
+                colunas_encontradas[nova_col] = nome
+                logging.info(f"Match exato encontrado para {nova_col}: {nome}")
+                break
+    
+    # Se não encontrou todas, tenta match parcial case-insensitive
+    for nova_col, possiveis_nomes in mapeamento.items():
+        if nova_col not in colunas_encontradas:
+            for nome in possiveis_nomes:
+                matches = [col for col in df.columns if nome.lower() in col.lower()]
+                if matches:
+                    colunas_encontradas[nova_col] = matches[0]
+                    logging.info(f"Match parcial encontrado para {nova_col}: {matches[0]}")
+                    break
+    
+    # Log do resultado final
+    logging.info(f"Mapeamento final de colunas: {colunas_encontradas}")
+    logging.info(f"Colunas não mapeadas: {[col for col in mapeamento.keys() if col not in colunas_encontradas]}")
+    
+    return colunas_encontradas
+
+def analisar_metricas_ageis(df, tribo: str = None):
+    """Analisa métricas ágeis do dataframe"""
+    try:
+        # Mapeia as colunas primeiro para garantir que temos os nomes corretos
+        colunas = mapear_colunas_ageis(df)
+        if not colunas:
+            raise ValueError("Não foi possível mapear as colunas necessárias")
+            
+        # Filtrar por tribo se especificado
+        if tribo and 'tribo' in colunas:
+            # Primeiro normalizamos o nome da tribo para comparação
+            tribo_norm = normalizar_texto(tribo)
+            # Criamos uma coluna temporária normalizada para comparação
+            df['tribo_temp_norm'] = df[colunas['tribo']].apply(normalizar_texto)
+            # Filtramos usando a coluna normalizada
+            df = df[df['tribo_temp_norm'] == tribo_norm]
+            # Removemos a coluna temporária
+            df = df.drop('tribo_temp_norm', axis=1)
+            
+            logging.info(f"Dados filtrados para tribo '{tribo}': {len(df)} registros")
+            
+        # Analisa CFD
+        cfd_metricas = analisar_cfd(df, colunas)
+        if not cfd_metricas:
+            raise ValueError("Não foi possível analisar o CFD")
+            
+        # Calcula métricas por tribo
+        metricas_por_tribo = {}
+        if 'tribo' in colunas:
+            tribos = df[colunas['tribo']].unique()
+            for tribo in tribos:
+                df_tribo = df[df[colunas['tribo']] == tribo]
+                metricas_tribo = analisar_cfd(df_tribo, colunas)
+                if metricas_tribo:
+                    # Calcula taxa de bugs
+                    if 'issue_type' in colunas:
+                        total_issues = len(df_tribo)
+                        bugs = len(df_tribo[df_tribo[colunas['issue_type']].str.contains('bug', case=False, na=False)])
+                        bug_ratio = bugs / total_issues if total_issues > 0 else None
+                    else:
+                        bug_ratio = None
+                    
+                    metricas_por_tribo[tribo] = {
+                        'throughput': metricas_tribo['throughput'],
+                        'throughput_diario': metricas_tribo['throughput_diario'],
+                        'lead_time': metricas_tribo['avg_lead_time'],
+                        'wip': metricas_tribo['wip'],
+                        'bug_ratio': bug_ratio
+                    }
+                    
+        # Calcula métricas por squad
+        metricas_por_squad = {}
+        if 'squad' in colunas:
+            squads = df[colunas['squad']].unique()
+            for squad in squads:
+                df_squad = df[df[colunas['squad']] == squad]
+                metricas_squad = analisar_cfd(df_squad, colunas)
+                if metricas_squad:
+                    # Calcula taxa de bugs
+                    if 'issue_type' in colunas:
+                        total_issues = len(df_squad)
+                        bugs = len(df_squad[df_squad[colunas['issue_type']].str.contains('bug', case=False, na=False)])
+                        bug_ratio = bugs / total_issues if total_issues > 0 else None
+                    else:
+                        bug_ratio = None
+                    
+                    metricas_por_squad[squad] = {
+                        'throughput': metricas_squad['throughput'],
+                        'throughput_diario': metricas_squad['throughput_diario'],
+                        'lead_time': metricas_squad['avg_lead_time'],
+                        'wip': metricas_squad['wip'],
+                        'bug_ratio': bug_ratio
+                    }
+        
+        return {
+            'metricas_gerais': {
+                'throughput': cfd_metricas['throughput'],
+                'throughput_diario': cfd_metricas['throughput_diario'],
+                'lead_time': cfd_metricas['avg_lead_time'],
+                'wip': cfd_metricas['wip']
+            },
+            'metricas_por_tribo': metricas_por_tribo,
+            'metricas_por_squad': metricas_por_squad
+        }
+        
+    except Exception as e:
+        logging.error(f"Erro ao analisar métricas ágeis: {str(e)}")
+        return None
+
+def analisar_cfd(df, colunas):
+    """Analisa o Cumulative Flow Diagram (CFD) para calcular métricas importantes"""
+    try:
+        # Verifica se temos as colunas necessárias
+        if not {'data'}.issubset(colunas.keys()):
+            logging.error("Coluna de data para CFD não encontrada")
+            # Retornar métricas padrão para não quebrar o fluxo
+            return {
+                'wip': 0,
+                'throughput': 0,
+                'throughput_diario': 0,
+                'avg_lead_time': None,
+                'cfd_data': pd.DataFrame()
+            }
+        
+        # Se não tem status, criamos um status artificial para não quebrar o fluxo
+        if 'status' not in colunas:
+            logging.warning("Coluna de status não encontrada, usando status artificial")
+            df['status_artificial'] = 'Em andamento'  # Status genérico
+            colunas['status'] = 'status_artificial'
+
+        # Ordena por data
+        df_sorted = df.sort_values(by=colunas['data'])
+        
+        # Agrupa por data e status e conta os itens
+        cfd_data = df_sorted.groupby([colunas['data'], colunas['status']]).size().unstack(fill_value=0)
+        
+        # Calcula o acumulado para cada status
+        cfd_cumsum = cfd_data.cumsum()
+        
+        # Calcula métricas baseadas no CFD
+        wip = cfd_cumsum.iloc[-1].sum() if not cfd_cumsum.empty else 0  # Work in Progress atual
+        
+        # Calcula throughput com proteção contra divisão por zero
+        try:
+            # Calcula a diferença de dias
+            dias_diff = (df_sorted[colunas['data']].max() - df_sorted[colunas['data']].min()).days
+            if dias_diff > 0:
+                # Total de itens concluídos
+                itens_concluidos = len(df[df[colunas['status']].isin(['Done', 'Concluído', 'Completed'])])
+                
+                # Throughput diário (itens por dia)
+                throughput_diario = itens_concluidos / dias_diff if dias_diff > 0 else 0
+                
+                # Throughput mensal (itens por mês)
+                throughput = itens_concluidos / (dias_diff / 30) if dias_diff > 0 else 0
+            else:
+                throughput_diario = 0
+                throughput = 0  # caso não haja diferença de dias
+        except Exception as e:
+            logging.warning(f"Erro ao calcular throughput: {str(e)}")
+            throughput_diario = 0
+            throughput = 0  # valor padrão em caso de erro
+        
+        # Calcula o lead time médio se disponível
+        if 'lead_time' in colunas:
+            avg_lead_time = df[df[colunas['status']].isin(['Done', 'Concluído', 'Completed'])][colunas['lead_time']].mean()
+        else:
+            avg_lead_time = None
+        
+        return {
+            'wip': wip,
+            'throughput': throughput,
+            'throughput_diario': throughput_diario,
+            'avg_lead_time': avg_lead_time,
+            'cfd_data': cfd_cumsum
+        }
+        
+    except Exception as e:
+        logging.error(f"Erro ao analisar CFD: {str(e)}")
+        return None
+
+def gerar_insights(metricas: Dict, alocacao: Dict, cfd: Dict) -> List[str]:
+    """Gera insights estratégicos baseados nas análises"""
+    insights = []
+    
+    # Verificar se temos dados válidos
+    if not all(isinstance(x, dict) for x in [metricas, alocacao, cfd]):
+        return ["⚠️ **Dados Insuficientes**: Não foi possível gerar insights."]
+    
+    # Análise de Capacidade vs Demanda
+    taxa_saida = cfd.get('throughput', 0)
+    taxa_entrada = cfd.get('wip', 0)
+    taxa_utilizacao = taxa_saida / taxa_entrada if taxa_entrada > 0 else 0
+    if taxa_utilizacao < 0.8:
+        insights.append(f"🚨 **Alerta de Capacidade**: Taxa de utilização em {taxa_utilizacao:.1%}. Backlog crescente pode impactar entregas futuras.")
+    
+    # Análise de Qualidade e Sustentabilidade
+    if metricas['qualidade']['bugs_ratio'] > 0.2:
+        insights.append(f"⚠️ **Risco de Qualidade**: Taxa de bugs em {metricas['qualidade']['bugs_ratio']:.1%} pode impactar satisfação do cliente e custo de manutenção.")
+    
+    # Análise de Composição de Times
+    gaps_squads = []
+    for squad, papeis in alocacao['composicao_squads'].items():
+        gaps = []
+        if 'QA' not in papeis:
+            gaps.append('QA')
+        if 'Tech Lead' not in papeis:
+            gaps.append('Tech Lead')
+        if gaps:
+            gaps_squads.append(f"Squad {squad}: {', '.join(gaps)}")
+    
+    if gaps_squads:
+        insights.append(f"👥 **Gap de Papéis Críticos**: Identificados gaps que podem impactar qualidade e liderança técnica:\n" + "\n".join(gaps_squads))
+    
+    # Análise de Eficiência
+    if metricas['lead_time']['media'] > 14:  # Exemplo de threshold
+        insights.append(f"⏱️ **Oportunidade de Otimização**: Lead time médio de {metricas['lead_time']['media']:.1f} dias indica potencial para melhorias no fluxo de valor.")
+    
+    return insights
+
+def gerar_insights_detalhados(metricas: Dict, alocacao: Dict, cfd: Dict) -> List[str]:
+    """Gera insights estratégicos detalhados baseados nas análises"""
+    insights = []
+    
+    # Verificação robusta de dados
+    if not metricas or not isinstance(metricas, dict) or not alocacao or not isinstance(alocacao, dict) or not cfd or not isinstance(cfd, dict):
+        return ["⚠️ **Dados Insuficientes**: Não foi possível gerar insights detalhados."]
+    
+    # Verificar os dicionários com defaults seguros
+    metricas_gerais = metricas.get('metricas_gerais', {})
+    if not isinstance(metricas_gerais, dict):
+        metricas_gerais = {}
+        
+    # Análise de Maturidade - com validações robustas
+    maturidade_media = metricas_gerais.get('maturidade_media', 0)
+    maturidade_std = metricas_gerais.get('maturidade_std', 0)
+    
+    if maturidade_media >= 85:
+        insights.append("📈 **Maturidade Excelente**: A organização apresenta nível excelente de maturidade ágil, indicando práticas bem estabelecidas e consistentes.")
+    elif maturidade_media >= 75:
+        insights.append("📊 **Maturidade Alta**: Boas práticas implementadas, com oportunidades pontuais de aprimoramento.")
+    elif maturidade_media >= 60:
+        insights.append("⚠️ **Maturidade Média**: Práticas ágeis em desenvolvimento, necessitando fortalecimento.")
+    else:
+        insights.append("🚨 **Maturidade Baixa**: Práticas ágeis em estágio inicial, requerendo atenção prioritária.")
+
+    # Análise de Variabilidade
+    if maturidade_std > 15:
+        insights.append(f"📊 **Alta Variabilidade**: Inconsistência significativa na adoção de práticas ágeis (σ={maturidade_std:.2f}).")
+    elif maturidade_std > 10:
+        insights.append(f"📈 **Variabilidade Moderada**: Algumas áreas mais avançadas que outras (σ={maturidade_std:.2f}).")
+    else:
+        insights.append(f"✅ **Baixa Variabilidade**: Consistência na adoção de práticas ágeis (σ={maturidade_std:.2f}).")
+
+    # Análise de Alocação - com tratamento para valores nulos
+    media_pessoas_squad = alocacao.get('media_pessoas_squad', 0)
+    if media_pessoas_squad > 15:
+        insights.append(f"⚠️ **Equipes Grandes**: Média de {media_pessoas_squad:.1f} pessoas por squad, acima do recomendado (5-9).")
+    elif media_pessoas_squad < 5:
+        insights.append(f"⚠️ **Equipes Pequenas**: Média de {media_pessoas_squad:.1f} pessoas por squad, abaixo do recomendado (5-9).")
+        
+    # Análise de Eficiência - evitando divisão por zero
+    taxa_saida = cfd.get('throughput', 0)
+    taxa_entrada = cfd.get('wip', 1)  # Usar 1 como valor padrão para evitar divisão por zero
+    if taxa_entrada > 0:
+        taxa_utilizacao = taxa_saida / taxa_entrada
+        if taxa_utilizacao < 0.8:
+            insights.append(f"🚨 **Gargalo de Entrega**: Taxa de utilização em {taxa_utilizacao:.1%}, indicando acúmulo de backlog.")
+      
+    # Análise de Qualidade - se a informação estiver disponível
+    qualidade_metricas = metricas.get('qualidade', {})
+    if isinstance(qualidade_metricas, dict):
+        bugs_ratio = qualidade_metricas.get('bugs_ratio', 0)
+        if bugs_ratio > 0.2:
+            insights.append(f"⚠️ **Risco de Qualidade**: Taxa de bugs em {bugs_ratio:.1%}.")
+    
+    # Análise de Lead Time - se a informação estiver disponível
+    lead_time_metricas = metricas.get('lead_time', {})
+    if isinstance(lead_time_metricas, dict):
+        lead_time = lead_time_metricas.get('media', 0)
+        if lead_time > 14:
+            insights.append(f"⏱️ **Lead Time Alto**: Média de {lead_time:.1f} dias, indicando oportunidades de otimização.")
+
+    # Análise de Portfolio - validando presença de dados
+    if isinstance(alocacao.get('composicao_squads', {}), dict) and alocacao.get('composicao_squads'):
+        squads_grandes = sum(1 for _, papeis in alocacao['composicao_squads'].items() 
+                           if isinstance(papeis, dict) and len(papeis) > 9)
+        if squads_grandes > 0:
+            insights.append(f"📊 **Distribuição Inadequada**: {squads_grandes} squads com mais de 9 pessoas.")
+
+    # Se não conseguiu gerar insights específicos
+    if not insights:
+        insights.append("ℹ️ **Análise Limitada**: Não foi possível gerar insights específicos com os dados disponíveis.")
+
+    return insights
+
+def extrair_metricas_ageis(analises: Dict[str, Any], tribo: str = None) -> Dict:
+    """Extrai e processa métricas ágeis com validação de dados"""
+    try:
+        df = analises.get('dados_cruzados', pd.DataFrame())
+        if df.empty:
+            logging.warning("Dados cruzados não encontrados ou vazios")
+            return {
+                'metricas': {'metricas_gerais': {'maturidade_media': 0}},
+                'cfd': {'wip': 0, 'throughput': 0},
+                'alocacao': {'media_pessoas_squad': 0, 'composicao_squads': {}},
+                'insights': ["⚠️ **Dados Insuficientes**: Não foi possível gerar insights detalhados."]
+            }
+              
+        # Calcular métricas básicas de maturidade
+        maturidade_media = df['Maturidade'].mean() if 'Maturidade' in df.columns else 0
+        maturidade_std = df['Maturidade'].std() if 'Maturidade' in df.columns else 0
+        
+        # Essas métricas sempre funcionarão mesmo sem o CFD completo
+        metricas_calculadas = {
+            'metricas_gerais': {
+                'maturidade_media': maturidade_media,
+                'maturidade_std': maturidade_std,
+            }
+        }
+        
+        # Tentamos calcular métricas ágeis se possível
+        try:
+            metricas_ageis = analisar_metricas_ageis(df, tribo)
+            if metricas_ageis:
+                metricas_calculadas.update(metricas_ageis)
+        except Exception as e:
+            logging.warning(f"Não foi possível calcular métricas ágeis detalhadas: {str(e)}")
+        
+        # Preparar dados para CFD
+        colunas_cfd = {}
+        for coluna_necessaria in ['data', 'status', 'lead_time']:
+            for coluna_real in df.columns:
+                if coluna_necessaria.lower() in coluna_real.lower():
+                    colunas_cfd[coluna_necessaria] = coluna_real
+                    break
+        
+        # Calcular CFD - mesmo que falhe, continuamos com o que temos
+        try:
+            cfd = analisar_cfd(df, colunas_cfd)
+        except Exception as e:
+            logging.warning(f"Erro ao analisar CFD: {str(e)}")
+            cfd = {'wip': 0, 'throughput': 0, 'avg_lead_time': None}
+        
+        # Analisar alocação
+        alocacao = analisar_alocacao(analises.get('alocacao', pd.DataFrame()), tribo)
+        
+        # Gerar insights com os dados disponíveis
+        try:
+            insights = gerar_insights_detalhados(metricas_calculadas, alocacao, cfd)
+        except Exception as e:
+            logging.warning(f"Erro ao gerar insights: {str(e)}")
+            insights = ["⚠️ **Insights Limitados**: Dados insuficientes para análise completa."]
+        
+        return {
+            'metricas': metricas_calculadas,
+            'cfd': cfd,
+            'alocacao': alocacao,
+            'insights': insights
+        }
+        
+    except Exception as e:
+        logging.error(f"Erro ao extrair métricas: {str(e)}")
+        raise
+
+def verificar_dados(df: pd.DataFrame) -> bool:
+    colunas = mapear_colunas_ageis(df)
+    missing = [col for col, nome in colunas.items() if nome not in df.columns]
+    if missing:
+        logging.warning(f"Colunas ausentes: {missing}")
+    return len(missing) == 0
+
+def testar_mapeamento(df: pd.DataFrame) -> Dict[str, Any]:
+    """Testa o mapeamento de colunas e retorna diagnóstico"""
+    try:
+        # Teste de mapeamento de colunas
+        colunas = mapear_colunas_ageis(df)
+        
+        # Validação do resultado
+        if not colunas:
+            return {
+                'status': 'error',
+                'mensagem': 'Nenhuma coluna mapeada',
+                'colunas_encontradas': []
+            }
+            
+        # Verificar colunas críticas
+        colunas_criticas = ['data', 'status', 'tribo', 'squad']
+        missing = [col for col in colunas_criticas if col not in colunas]
+        
+        if missing:
+            return {
+                'status': 'warning',
+                'mensagem': f'Colunas críticas ausentes: {", ".join(missing)}',
+                'colunas_encontradas': list(colunas.keys())
+            }
+            
+        return {
+            'status': 'success',
+            'mensagem': 'Mapeamento realizado com sucesso',
+            'colunas_encontradas': list(colunas.keys()),
+            'mapeamento': colunas
+        }
+        
+    except Exception as e:
+        logging.error(f"Erro ao testar mapeamento: {str(e)}")
+        return {
+            'status': 'error',
+            'mensagem': f'Erro ao testar mapeamento: {str(e)}',
+            'colunas_encontradas': []
+        }
+
+def executar_pipeline():
+    """Executa o pipeline completo de análise"""
+    try:
+        # Carregar dados
+        dados = carregar_dados()
+        
+        # Log detalhado dos dados carregados
+        for nome, df in dados.items():
+            if df is None or df.empty:
+                logging.warning(f"DataFrame {nome} está vazio")
+            else:
+                logging.info(f"DataFrame {nome} carregado com {len(df)} registros e colunas: {df.columns.tolist()}")
+        
+        # Validação crítica - apenas maturidade e alocação são essenciais
+        if dados['maturidade'].empty:
+            raise ValueError("Dados de maturidade não encontrados ou vazios")
+            
+        if dados['alocacao'].empty:
+            raise ValueError("Dados de alocação não encontrados ou vazios")
+            
+        # Dados executivos são opcionais
+        if dados['executivo'] is None or dados['executivo'].empty:
+            logging.warning("Dados executivos não encontrados ou vazios - continuando sem eles")
+            dados['executivo'] = pd.DataFrame()  # DataFrame vazio para evitar erros
+        
+        # Log da quantidade de registros
+        logging.info("Registros carregados:")
+        logging.info(f"- Maturidade: {len(dados['maturidade'])} registros")
+        logging.info(f"- Alocação: {len(dados['alocacao'])} registros")
+        if not dados['executivo'].empty:
+            logging.info(f"- Executivo: {len(dados['executivo'])} registros")
+        
+        # Testar mapeamento de colunas
+        mapeamento_mat = testar_mapeamento(dados['maturidade'])
+        mapeamento_aloc = testar_mapeamento(dados['alocacao'])
+        
+        if mapeamento_mat['status'] == 'error':
+            raise ValueError(f"Erro no mapeamento de colunas de maturidade: {mapeamento_mat['mensagem']}")
+            
+        if mapeamento_aloc['status'] == 'error':
+            raise ValueError(f"Erro no mapeamento de colunas de alocação: {mapeamento_aloc['mensagem']}")
+        
+        # Log do mapeamento
+        logging.info("Mapeamento de colunas:")
+        logging.info(f"- Maturidade: {mapeamento_mat['colunas_encontradas']}")
+        logging.info(f"- Alocação: {mapeamento_aloc['colunas_encontradas']}")
+        
+        # Cruzar dados
+        dados_cruzados = cruzar_dados(dados)
+        logging.info(f"Dados cruzados: {len(dados_cruzados)} registros")
+        
+        # Extrair métricas
+        logging.info("Extraindo métricas...")
+        analises = {
+            'dados_cruzados': dados_cruzados,
+            'maturidade': dados['maturidade'],
+            'alocacao': dados['alocacao']
+        }
+        
+        metricas = extrair_metricas_ageis(analises)
+        logging.info("Métricas extraídas com sucesso")
+        
+        return {
+            "status": "success",
+            "dados": analises,
+            "metricas": metricas,
+            "mensagem": f"Pipeline executado com sucesso. Registros processados: {len(dados_cruzados)}"
+        }
+        
+    except FileNotFoundError as e:
+        logging.error(f"Erro ao carregar dados: {str(e)}")
+        return {
+            "status": "error",
+            "dados": None,
+            "mensagem": f"Arquivo não encontrado. Verifique se os arquivos Excel estão na pasta 'dados': {str(e)}"
+        }
+    except ValueError as e:
+        logging.error(f"Erro de validação: {str(e)}")
+        return {
+            "status": "error",
+            "dados": None,
+            "mensagem": f"Erro nos dados: {str(e)}"
+        }
+    except Exception as e:
+        logging.error(f"Erro no pipeline: {str(e)}")
+        traceback.print_exc()
+        return {
+            "status": "error",
+            "dados": None,
+            "mensagem": f"Erro inesperado: {str(e)}"
+        }
+
+# Remova todo o código abaixo desta linha
+# Não execute nada automaticamente!
+# O insights.py deve importar executar_pipeline e chat_ia_loop para orquestrar o fluxo.
+
+def identificar_gargalos(cfd: pd.DataFrame) -> List[str]:
+    """Identifica gargalos no fluxo de trabalho baseado no CFD"""
+    gargalos = []
+    
+    if cfd.empty:
+        logging.warning("CFD vazio - não é possível identificar gargalos")
+        return gargalos
+        
+    try:
+        # Calcula a diferença entre status consecutivos
+        for col in cfd.columns[:-1]:
+            next_col = cfd.columns[cfd.columns.get_loc(col) + 1]
+            diferenca = cfd[next_col] - cfd[col]
+            
+            # Se a diferença média é maior que um threshold
+            if diferenca.mean() > diferenca.std() * 2:
+                gargalos.append(f"Gargalo identificado entre {col} e {next_col}")
+                
+        return gargalos
+        
+    except Exception as e:
+        logging.error(f"Erro ao identificar gargalos: {str(e)}")
+        return gargalos
+
+def testar_analise_tribo(tribo: str):
+    """Função de teste para validar análise de tribo"""
+    try:
+        # Carregar dados
+        dados = carregar_dados()
+        if not dados:
+            raise ValueError("Não foi possível carregar os dados")
+            
+        # Filtrar dados da tribo
+        df_tribo = dados['maturidade'][dados['maturidade']['Tribo'] == tribo]
+        if df_tribo.empty:
+            raise ValueError(f"Tribo '{tribo}' não encontrada nos dados")
+            
+        # Executar análises
+        metricas = analisar_metricas_ageis(df_tribo)
+        if not metricas:
+            raise ValueError("Falha ao calcular métricas ágeis")
+            
+        return {
+            "status": "success",
+            "tribo": tribo,
+            "metricas": metricas
+        }
+        
+    except Exception as e:
+        logging.error(f"Erro no teste de análise da tribo {tribo}: {str(e)}")
+        return {
+            "status": "error",
+            "tribo": tribo,
+            "erro": str(e)
+        }
+
+def mapear_estrutura_org(analises: Dict[str, Any]) -> Dict:
+    """Mapeia a estrutura organizacional a partir das análises"""
+    try:
+        estrutura = {
+            'tribos': {},
+            'total_squads': 0,
+            'total_pessoas': 0,
+            'papeis_total': {},
+            'roles': {},  # Adicionado para mapear papéis e suas descrições
+            'maturidades': {}  # Adicionado para armazenar dados de maturidade
+        }
+        
+        # Verificar se todos os dados necessários estão presentes
+        if not analises:
+            logging.warning("Dados de análise vazios ou inexistentes")
+            return estrutura
+            
+        # Extrair dados de alocação e maturidade
+        df_alocacao = analises.get('alocacao', pd.DataFrame())
+        df_maturidade = analises.get('maturidade', pd.DataFrame())
+        
+        if df_alocacao is None or df_alocacao.empty:
+            logging.warning("DataFrame de alocação vazio")
+            # Dados de exemplo para estrutura - permitir funcionamento mesmo sem dados
+            estrutura['tribos']['Exemplo'] = {
+                'squads': ['Squad 1', 'Squad 2'],
+                'total_pessoas': 10,
+                'papeis': {'Desenvolvedor': 5, 'PO': 1, 'QA': 2, 'Tech Lead': 2}
+            }
+            estrutura['total_squads'] = 2
+            estrutura['total_pessoas'] = 10
+            estrutura['papeis_total'] = {'Desenvolvedor': 5, 'PO': 1, 'QA': 2, 'Tech Lead': 2}
+            estrutura['roles'] = {
+                'Desenvolvedor': 'Responsável pelo desenvolvimento de código',
+                'PO': 'Product Owner, responsável pelo backlog do produto',
+                'QA': 'Quality Assurance, responsável pela qualidade',
+                'Tech Lead': 'Líder técnico do squad'
+            }
+            return estrutura
+            
+        # Verificar as colunas necessárias - buscar por variações nos nomes das colunas
+        colunas_mapeadas = {}
+        colunas_necessarias_base = ['tribe', 'squad', 'person', 'role']
+        colunas_alternativas = {
+            'tribe': ['tribe', 'tribo', 'Tribo', 'Tribe'],
+            'squad': ['squad', 'Squad', 'equipe', 'Equipe', 'time', 'Time'],
+            'person': ['person', 'pessoa', 'Pessoa', 'nome', 'Nome', 'colaborador', 'Colaborador'],
+            'role': ['role', 'papel', 'Papel', 'cargo', 'Cargo', 'funcao', 'Funcao', 'função', 'Função']
+        }
+        
+        # Tentar encontrar colunas alternativas
+        for col_base, alternativas in colunas_alternativas.items():
+            for alt in alternativas:
+                if alt in df_alocacao.columns:
+                    colunas_mapeadas[col_base] = alt
+                    break
+            
+        # Verificar colunas faltantes após tentativa de mapeamento
+        colunas_faltantes = [col for col in colunas_necessarias_base if col not in colunas_mapeadas]
+        
+        if colunas_faltantes:
+            logging.warning(f"Colunas necessárias ausentes mesmo após mapeamento: {colunas_faltantes}")
+            # Adicionar colunas vazias para evitar erros
+            for col in colunas_faltantes:
+                df_alocacao[col] = 'Indefinido'
+                colunas_mapeadas[col] = col
+        
+        # Usar colunas mapeadas        
+        tribe_col = colunas_mapeadas.get('tribe', 'tribe')
+        squad_col = colunas_mapeadas.get('squad', 'squad') 
+        person_col = colunas_mapeadas.get('person', 'person')
+        role_col = colunas_mapeadas.get('role', 'role')
+        
+        # Normalizar valores para evitar duplicações por diferenças de capitalização/acentos
+        df_alocacao['tribe_norm'] = df_alocacao[tribe_col].apply(lambda x: unidecode(str(x).lower()))
+        df_alocacao['squad_norm'] = df_alocacao[squad_col].apply(lambda x: unidecode(str(x).lower()))
+                
+        # Mapear tribos e squads
+        for tribo, tribo_norm in zip(df_alocacao[tribe_col].unique(), df_alocacao['tribe_norm'].unique()):
+            if pd.isna(tribo) or not tribo:
+                continue
+                
+            df_tribo = df_alocacao[df_alocacao['tribe_norm'] == tribo_norm]
+            
+            # Usar nome original, não normalizado
+            estrutura['tribos'][tribo] = {
+                'squads': list(df_tribo[squad_col].unique()),
+                'total_pessoas': len(df_tribo[person_col].unique()),
+                'papeis': dict(Counter(df_tribo[role_col])),
+                'nome_normalizado': tribo_norm  # Adicionar nome normalizado para busca
+            }
+        
+        # Calcular totais
+        estrutura['total_squads'] = len(df_alocacao[squad_col].unique())
+        estrutura['total_pessoas'] = len(df_alocacao[person_col].unique())
+        estrutura['papeis_total'] = dict(Counter(df_alocacao[role_col]))
+        
+        # Adicionar descrições de papéis
+        papeis_descricoes = {
+            'desenvolvedor': 'Responsável pelo desenvolvimento de código',
+            'po': 'Product Owner, responsável pelo backlog do produto',
+            'qa': 'Quality Assurance, responsável pela qualidade',
+            'tech lead': 'Líder técnico do squad',
+            'scrum master': 'Facilitador do processo ágil',
+            'agile master': 'Facilitador do processo ágil',
+            'ux': 'User Experience, responsável pela experiência do usuário',
+            'ui': 'User Interface, responsável pela interface do usuário',
+            'analista': 'Analista de negócios ou sistemas',
+            'arquiteto': 'Arquiteto de software ou soluções',
+            'gerente': 'Gerente de produto ou projeto',
+            'devops': 'Responsável pela integração entre desenvolvimento e operações',
+            'sre': 'Site Reliability Engineer, responsável pela confiabilidade',
+            'data scientist': 'Cientista de dados, responsável por análises avançadas',
+            'data engineer': 'Engenheiro de dados, responsável por pipelines de dados'
+        }
+          # Mapear papéis encontrados para as descrições
+        for papel in estrutura['papeis_total'].keys():
+            papel_norm = unidecode(str(papel).lower())
+            for desc_key, desc in papeis_descricoes.items():
+                if desc_key in papel_norm or papel_norm in desc_key:
+                    estrutura['roles'][papel] = desc
+                    break
+            else:
+                estrutura['roles'][papel] = 'Função na organização'
+        
+        # Processar dados de maturidade se disponíveis
+        if df_maturidade is not None and not df_maturidade.empty:
+            if 'Tribo' in df_maturidade.columns and 'Maturidade' in df_maturidade.columns:
+                logging.info("Processando dados de maturidade das tribos")
+                
+                # Criar mapeamento de tribos para facilitar busca por nome normalizado
+                nomes_tribos_normalizados = {}
+                for tribo in estrutura['tribos'].keys():
+                    tribo_norm = normalizar_texto(tribo)
+                    nomes_tribos_normalizados[tribo_norm] = tribo
+                
+                # Adicionar maturidade para cada tribo
+                for _, row in df_maturidade.iterrows():
+                    tribo_nome = row['Tribo']
+                    maturidade = row['Maturidade']
+                    
+                    if pd.notna(tribo_nome) and pd.notna(maturidade):
+                        # Tentar encontrar tribo existente usando normalização
+                        tribo_norm = normalizar_texto(tribo_nome)
+                        
+                        # Primeiro, verificar se a tribo existe diretamente
+                        if tribo_nome in estrutura['tribos']:
+                            estrutura['tribos'][tribo_nome]['maturidade'] = float(maturidade)
+                            estrutura['maturidades'][tribo_nome] = float(maturidade)
+                        
+                        # Caso contrário, tentar encontrar por nome normalizado
+                        elif tribo_norm in nomes_tribos_normalizados:
+                            tribo_key = nomes_tribos_normalizados[tribo_norm]
+                            estrutura['tribos'][tribo_key]['maturidade'] = float(maturidade)
+                            estrutura['maturidades'][tribo_key] = float(maturidade)
+                        
+                        # Se ainda não encontrou, criar um novo registro para a tribo
+                        else:
+                            estrutura['maturidades'][tribo_nome] = float(maturidade)
+                            # Se a tribo não existe na estrutura, adicionar com informações mínimas
+                            if tribo_nome not in estrutura['tribos']:
+                                estrutura['tribos'][tribo_nome] = {
+                                    'squads': [],
+                                    'total_pessoas': 0,
+                                    'papeis': {},
+                                    'maturidade': float(maturidade),
+                                    'nome_normalizado': tribo_norm
+                                }
+                
+                # Log das maturidades carregadas                logging.info(f"Maturidades carregadas: {estrutura['maturidades']}")
+        
+        return estrutura
+        
+    except Exception as e:
+        logging.error(f"Erro ao mapear estrutura organizacional: {str(e)}")
+        tb_str = traceback.format_exc()
+        logging.error(f"Traceback: {tb_str}")
+        return {
+            'tribos': {},
+            'total_squads': 0,
+            'total_pessoas': 0,
+            'papeis_total': {},
+            'roles': {},
+            'maturidades': {}
+        }
+
+def identificar_entidade_consulta(query: str, estrutura: Dict) -> Tuple[str, str]:
+    """Identifica o tipo de entidade (tribo/squad) e seu nome na consulta"""
+    # Verificar se query é válida
+    if not query or not isinstance(query, str):
+        return None, None
+        
+    # Verificar se estrutura está definida corretamente
+    if not estrutura or not isinstance(estrutura, dict) or 'tribos' not in estrutura:
+        logging.warning("Estrutura inválida ou tribos não definidas em identificar_entidade_consulta")
+        return None, None
+        
+    # Normalizar a consulta para busca insensível ao caso e sem acentos
+    query_norm = normalizar_texto(query)
+    
+    # Verificar se a query menciona explicitamente "tribo" ou "squad"
+    tipo_mencionado = None
+    if "tribo" in query_norm:
+        tipo_mencionado = "tribo"
+    elif "squad" in query_norm or "equipe" in query_norm or "time" in query_norm:
+        tipo_mencionado = "squad"
+    
+    # Procurar por tribos - primeiro tentamos o nome exato
+    for tribo in estrutura['tribos'].keys():
+        if tribo.lower() in query.lower():
+            logging.info(f"Entidade identificada como tribo: {tribo}")
+            return 'tribo', tribo
+    
+    # Se não achar com nome exato, tentar com nome normalizado
+    for tribo, info in estrutura['tribos'].items():
+        tribo_norm = normalizar_texto(tribo)
+        if tribo_norm in query_norm:
+            logging.info(f"Entidade identificada como tribo após normalização: {tribo}")
+            return 'tribo', tribo
+        
+        # Verificar nome normalizado armazenado na estrutura (se existir)
+        if isinstance(info, dict) and 'nome_normalizado' in info and info['nome_normalizado'] in query_norm:
+            logging.info(f"Entidade identificada como tribo usando nome_normalizado: {tribo}")
+            return 'tribo', tribo
+              # Procurar por squads - primeiro tentamos o nome exato
+    for tribo_info in estrutura['tribos'].values():
+        # Verificar se 'squads' existe e é uma lista
+        if not isinstance(tribo_info, dict) or 'squads' not in tribo_info or not isinstance(tribo_info['squads'], list):
+            continue
+            
+        for squad in tribo_info['squads']:
+            if squad and isinstance(squad, str) and squad.lower() in query.lower():
+                logging.info(f"Entidade identificada como squad: {squad}")
+                return 'squad', squad
+    
+    # Se não achar com nome exato, tentar com nome normalizado
+    for tribo_info in estrutura['tribos'].values():
+        # Verificar se 'squads' existe e é uma lista
+        if not isinstance(tribo_info, dict) or 'squads' not in tribo_info or not isinstance(tribo_info['squads'], list):
+            continue
+            
+        for squad in tribo_info['squads']:
+            if squad and isinstance(squad, str):
+                squad_norm = normalizar_texto(squad)
+                if squad_norm in query_norm:
+                    logging.info(f"Entidade identificada como squad após normalização: {squad}")
+                    return 'squad', squad
+      # Se mencionou explicitamente "tribo" ou "squad", mas não encontramos o nome
+    if tipo_mencionado:
+        # Tentar extrair o nome da entidade do contexto da frase
+        words = query_norm.split()
+        for i, word in enumerate(words):
+            if word == tipo_mencionado and i < len(words) - 1:
+                # Verificar palavra seguinte e subsequentes como possível nome
+                nome_candidato = words[i+1]
+                # Se uma palavra após "tribo" tem mais de 3 caracteres, pode ser um nome
+                if len(nome_candidato) > 3 and nome_candidato not in ["da", "de", "do", "dos", "das"]:
+                    # Verificar se é um nome parcial de alguma tribo/squad
+                    if tipo_mencionado == "tribo":
+                        for tribo in estrutura['tribos'].keys():
+                            tribo_norm = normalizar_texto(tribo)
+                            if nome_candidato in tribo_norm:
+                                logging.info(f"Entidade tribo identificada por palavra-chave: {tribo}")
+                                return 'tribo', tribo
+                    elif tipo_mencionado == "squad":
+                        for tribo_info in estrutura['tribos'].values():
+                            if not isinstance(tribo_info, dict) or 'squads' not in tribo_info:
+                                continue
+                            for squad in tribo_info['squads']:
+                                if not squad or not isinstance(squad, str):
+                                    continue
+                                squad_norm = normalizar_texto(squad)
+                                if nome_candidato in squad_norm:
+                                    logging.info(f"Entidade squad identificada por palavra-chave: {squad}")
+                                    return 'squad', squad
+    
+    # Busca por palavras específicas nos nomes das tribos (para casos como "vendas", "benefícios", etc.)
+    for tribo in estrutura['tribos'].keys():
+        tribo_words = set(normalizar_texto(tribo).split())
+        query_words = set(query_norm.split())
+        common_words = tribo_words.intersection(query_words)
+        # Se há pelo menos uma palavra em comum que não seja uma stopword
+        if common_words and not all(word in ["de", "da", "do", "para", "em", "com", "por"] for word in common_words):
+            logging.info(f"Entidade tribo identificada por palavras em comum: {tribo}")
+            return 'tribo', tribo
+    
+    # Se não encontrou nada específico, veja se é uma consulta geral sobre tribo ou squad
+    if "tribo" in query_norm and not tipo_mencionado:
+        logging.info("Consulta geral sobre tribos identificada")
+        return 'tribo_geral', 'tribo'
+    elif ("squad" in query_norm or "equipe" in query_norm or "time" in query_norm) and not tipo_mencionado:
+        logging.info("Consulta geral sobre squads identificada")
+        return 'squad_geral', 'squad'
+
+    logging.warning(f"Não foi possível identificar entidade na consulta: '{query}'")        
+    return None, None
+
+def preparar_dados_consulta(entidade: str, nome: str, estrutura: Dict, analises: Dict) -> Dict:
+    """Prepara dados relevantes baseado na entidade consultada"""
+    if not entidade or not nome:
+        return analises
+        
+    dados_filtrados = {
+        'estrutura_organizacional': estrutura  # Sempre incluir a estrutura organizacional para contexto
+    }
+    
+    # Adicionar métricas e insights disponíveis
+    for key in ['metricas', 'insights']:
+        if key in analises:
+            dados_filtrados[key] = analises[key]
+    
+    # Normalizar o nome para comparação 
+    nome_norm = unidecode(nome.lower()) if nome else ""
+    
+    if entidade == 'tribo':
+        # Filtrar dados da tribo
+        for key, df in analises.items():
+            if not isinstance(df, pd.DataFrame) or df.empty:
+                dados_filtrados[key] = df
+                continue
+                
+            # Para cada DataFrame, encontrar a coluna correta para filtragem
+            if 'tribe' in df.columns:
+                # Primeiro tenta correspondência exata
+                filtered_df = df[df['tribe'] == nome]
+                # Se não encontrar, tenta normalizada
+                if filtered_df.empty:
+                    filtered_df = df[df['tribe'].apply(lambda x: unidecode(str(x).lower()) == nome_norm)]
+                dados_filtrados[key] = filtered_df
+            elif 'Tribo' in df.columns:
+                # Criamos uma coluna normalizada temporária para comparação
+                df['temp_tribo_norm'] = df['Tribo'].apply(normalizar_texto)
+                # Filtramos usando a coluna normalizada
+                filtered_df = df[df['temp_tribo_norm'] == nome_norm]
+                # Removemos a coluna temporária
+                df = df.drop('temp_tribo_norm', axis=1)
+                dados_filtrados[key] = filtered_df
+            else:
+                # Busca por outras colunas que possam conter o nome da tribo
+                found = False
+                for col in df.columns:
+                    if 'tribo' in col.lower() or 'tribe' in col.lower():
+                        # Primeiro tenta correspondência exata
+                        filtered_df = df[df[col] == nome]
+                        # Se não encontrar, tenta normalizada
+                        if filtered_df.empty:
+                            filtered_df = df[df[col].apply(lambda x: unidecode(str(x).lower()) == nome_norm)]
+                        
+                        if not filtered_df.empty:
+                            dados_filtrados[key] = filtered_df
+                            found = True
+                            break
+                
+                if not found:
+                    dados_filtrados[key] = df
+                    
+    elif entidade == 'squad':
+        # Filtrar dados do squad
+        for key, df in analises.items():
+            if not isinstance(df, pd.DataFrame) or df.empty:
+                dados_filtrados[key] = df
+                continue
+                
+            # Para cada DataFrame, encontrar a coluna correta para filtragem
+            if 'squad' in df.columns:
+                # Primeiro tenta correspondência exata
+                filtered_df = df[df['squad'] == nome]
+                # Se não encontrar, tenta normalizada
+                if filtered_df.empty:
+                    filtered_df = df[df['squad'].apply(lambda x: unidecode(str(x).lower()) == nome_norm)]
+                dados_filtrados[key] = filtered_df
+            elif 'Squad' in df.columns:
+                # Primeiro tenta correspondência exata
+                filtered_df = df[df['Squad'] == nome]
+                # Se não encontrar, tenta normalizada
+                if filtered_df.empty:
+                    filtered_df = df[df['Squad'].apply(lambda x: unidecode(str(x).lower()) == nome_norm)]
+                dados_filtrados[key] = filtered_df
+            else:
+                # Busca por outras colunas que possam conter o nome do squad
+                found = False
+                for col in df.columns:
+                    if 'squad' in col.lower() or 'equipe' in col.lower() or 'time' in col.lower():
+                        # Primeiro tenta correspondência exata
+                        filtered_df = df[df[col] == nome]
+                        # Se não encontrar, tenta normalizada
+                        if filtered_df.empty:
+                            filtered_df = df[df[col].apply(lambda x: unidecode(str(x).lower()) == nome_norm)]
+                        
+                        if not filtered_df.empty:
+                            dados_filtrados[key] = filtered_df
+                            found = True
+                            break
+                
+                if not found:
+                    dados_filtrados[key] = df
+    else:
+        # Se não for tribo nem squad, retornar os dados originais
+        return analises
+    
+    # Log de diagnóstico
+    for key, df in dados_filtrados.items():
+        if isinstance(df, pd.DataFrame):
+            logging.debug(f"Dados filtrados para {entidade} '{nome}' - {key}: {len(df)} registros")
+            
+    return dados_filtrados
+
+def gerar_resposta_contextualizada(query: str, entidade: str, dados: Dict, client: OpenAI) -> str:
+    """Gera resposta contextualizada usando OpenAI"""
+    try:
+        # Preparar contexto com verificação robusta
+        contexto = []
+        tipo_entidade = None
+        
+        # Verificar se dados é válido
+        if not dados or not isinstance(dados, dict):
+            return "Não foi possível processar os dados para gerar uma resposta contextualizada."
+        
+        # Tentar obter métricas previamente calculadas - esta é uma fonte rica de informações
+        metricas = dados.get('metricas', {})
+        if isinstance(metricas, dict) and metricas:
+            contexto.append("=== Métricas Disponíveis ===")
+        
+        # Dados de insights (preexistentes)
+        insights = metricas.get('insights', [])
+        if isinstance(insights, list) and insights:
+            contexto.append("--- Insights Principais ---")
+            for insight in insights[:5]:  # Limitamos a 5 insights para não sobrecarregar
+                contexto.append(insight)
+        
+        # Verificar se a entidade existe nos dados e qual o tipo
+        # Tentar determinar se a entidade é uma tribo ou um squad
+        mat = dados.get('maturidade', pd.DataFrame())
+        aloc = dados.get('alocacao', pd.DataFrame())
+        
+        # Normalizar nome da entidade para busca case-insensitive e sem acentos
+        nome_norm = unidecode(entidade.lower()) if entidade else ""
+        
+        # Verificar se é uma tribo
+        is_tribo = False
+        if isinstance(mat, pd.DataFrame) and not mat.empty and 'Tribo' in mat.columns:
+            tribos = mat['Tribo'].apply(lambda x: unidecode(str(x).lower()))
+            if nome_norm in tribos.values:
+                is_tribo = True
+                tipo_entidade = 'tribo'
+        
+        if not is_tribo and isinstance(aloc, pd.DataFrame) and not aloc.empty:
+            if 'tribe' in aloc.columns:
+                tribos = aloc['tribe'].apply(lambda x: unidecode(str(x).lower()))
+                if nome_norm in tribos.values:
+                    is_tribo = True
+                    tipo_entidade = 'tribo'
+            elif 'Tribo' in aloc.columns:
+                tribos = aloc['Tribo'].apply(lambda x: unidecode(str(x).lower()))
+                if nome_norm in tribos.values:
+                    is_tribo = True
+                    tipo_entidade = 'tribo'
+        
+        # Verificar se é um squad
+        is_squad = False
+        if isinstance(aloc, pd.DataFrame) and not aloc.empty:
+            if 'squad' in aloc.columns:
+                squads = aloc['squad'].apply(lambda x: unidecode(str(x).lower()))
+                if nome_norm in squads.values:
+                    is_squad = True
+                    tipo_entidade = 'squad'
+            elif 'Squad' in aloc.columns:
+                squads = aloc['Squad'].apply(lambda x: unidecode(str(x).lower()))
+                if nome_norm in squads.values:
+                    is_squad = True
+                    tipo_entidade = 'squad'
+          # Se não foi possível determinar o tipo, verificar se o nome da entidade é 'tribo' ou 'squad'
+        if not tipo_entidade and entidade is not None:
+            if entidade.lower() == 'tribo':
+                tipo_entidade = 'tribo_geral'
+            elif entidade.lower() == 'squad':
+                tipo_entidade = 'squad_geral'
+        elif not tipo_entidade:
+            # Caso a entidade seja None, definir como análise geral
+            tipo_entidade = 'analise_geral'
+        
+        # Processar dados de acordo com o tipo de entidade
+        if tipo_entidade == 'tribo' or is_tribo:
+            contexto.append(f"=== Análise da Tribo: {entidade} ===")
+            
+            # Carregar dados de maturidade com verificações de segurança
+            if isinstance(mat, pd.DataFrame) and not mat.empty:
+                # Tentar diferentes formatos de coluna para a tribo
+                if 'Tribo' in mat.columns:
+                    # Filtrar usando normalização
+                    mat_filtered = mat[mat['Tribo'].apply(lambda x: unidecode(str(x).lower()) == nome_norm)]
+                    if not mat_filtered.empty and 'Maturidade' in mat_filtered.columns:
+                        contexto.append(f"Maturidade média: {mat_filtered['Maturidade'].mean():.1f}")
+                    elif 'Maturidade' in mat.columns:  # Fallback para todos os dados
+                        contexto.append(f"Maturidade média geral: {mat['Maturidade'].mean():.1f}")
+                        contexto.append("Nota: Dados específicos da tribo não encontrados, usando média geral.")
+                else:
+                    # Tentar outras variações do nome da coluna
+                    for col in mat.columns:
+                        if 'tribo' in col.lower() or 'tribe' in col.lower():
+                            mat_filtered = mat[mat[col].apply(lambda x: unidecode(str(x).lower()) == nome_norm)]
+                            if not mat_filtered.empty and 'Maturidade' in mat_filtered.columns:
+                                contexto.append(f"Maturidade média: {mat_filtered['Maturidade'].mean():.1f}")
+                                break
+                    else:
+                        if 'Maturidade' in mat.columns:  # Fallback para todos os dados
+                            contexto.append(f"Maturidade média geral: {mat['Maturidade'].mean():.1f}")
+                            contexto.append("Nota: Dados específicos da tribo não encontrados, usando média geral.")
+                
+            # Carregar dados de alocação com verificações de segurança
+            if isinstance(aloc, pd.DataFrame) and not aloc.empty:
+                # Primeiramente tenta filtrar por tribo se possível
+                aloc_filtered = aloc
+                if 'tribe' in aloc.columns:
+                    aloc_filtered = aloc[aloc['tribe'].apply(lambda x: unidecode(str(x).lower()) == nome_norm)]
+                elif 'Tribo' in aloc.columns:
+                    aloc_filtered = aloc[aloc['Tribo'].apply(lambda x: unidecode(str(x).lower()) == nome_norm)]
+                
+                # Se o filtro resultou em dados vazios, usar dados completos com aviso
+                if aloc_filtered.empty:
+                    aloc_filtered = aloc
+                    contexto.append("Nota: Dados específicos da tribo não encontrados, usando dados gerais.")
+                
+                # Extrair informações de pessoas e papéis
+                if 'person' in aloc_filtered.columns:
+                    contexto.append(f"Pessoas alocadas: {len(aloc_filtered['person'].unique())}")
+                
+                if 'squad' in aloc_filtered.columns:    
+                    contexto.append(f"Squads: {len(aloc_filtered['squad'].unique())}")
+                    
+                if 'role' in aloc_filtered.columns:
+                    contexto.append(f"Papéis: {dict(Counter(aloc_filtered['role']))}")
+                    
+                # Adicionar informações sobre composição de squads
+                if 'squad' in aloc_filtered.columns and 'person' in aloc_filtered.columns:
+                    pessoas_por_squad = aloc_filtered.groupby('squad')['person'].nunique()
+                    if not pessoas_por_squad.empty:
+                        contexto.append(f"Pessoas por squad (média): {pessoas_por_squad.mean():.1f}")
+                        contexto.append(f"Pessoas por squad (mínimo): {pessoas_por_squad.min()}")
+                        contexto.append(f"Pessoas por squad (máximo): {pessoas_por_squad.max()}")
+                
+            # Adicionar métricas de CFD e outras métricas ágeis se disponíveis
+            cfd = dados.get('metricas', {}).get('cfd', {})
+            if isinstance(cfd, dict):
+                if 'throughput' in cfd:
+                    contexto.append(f"Throughput: {cfd['throughput']:.2f} itens/mês")
+                if 'wip' in cfd:
+                    contexto.append(f"WIP atual: {cfd['wip']}")
+                if 'avg_lead_time' in cfd and cfd['avg_lead_time'] is not None:
+                    contexto.append(f"Lead time médio: {cfd['avg_lead_time']:.2f} dias")
+                
+        # Caso do Squad
+        elif tipo_entidade == 'squad' or is_squad:
+            contexto.append(f"=== Análise do Squad: {entidade} ===")
+            
+            if isinstance(aloc, pd.DataFrame) and not aloc.empty:
+                # Filtrar por squad
+                aloc_filtered = aloc
+                if 'squad' in aloc.columns:
+                    aloc_filtered = aloc[aloc['squad'].apply(lambda x: unidecode(str(x).lower()) == nome_norm)]
+                elif 'Squad' in aloc.columns:
+                    aloc_filtered = aloc[aloc['Squad'].apply(lambda x: unidecode(str(x).lower()) == nome_norm)]
+                
+                # Se o filtro resultou em dados vazios, usar aviso
+                if aloc_filtered.empty:
+                    contexto.append(f"Nota: Não foram encontrados dados para o squad '{entidade}'.")
+                else:
+                    if 'person' in aloc_filtered.columns:
+                        contexto.append(f"Pessoas no squad: {len(aloc_filtered['person'].unique())}")
+                    
+                    if 'role' in aloc_filtered.columns:
+                        contexto.append(f"Papéis: {dict(Counter(aloc_filtered['role']))}")
+                        
+                    # Se tivermos a tribo do squad, adicionar essa informação
+                    if 'tribe' in aloc_filtered.columns:
+                        tribos = aloc_filtered['tribe'].unique()
+                        if len(tribos) > 0:
+                            contexto.append(f"Pertence à tribo: {tribos[0]}")
+        
+        # Caso em que a entidade não foi identificada como tribo ou squad
+        elif tipo_entidade == 'tribo_geral':
+            contexto.append("=== Visão Geral das Tribos ===")
+            
+            # Listar todas as tribos disponíveis
+            tribos_disponiveis = []
+            if isinstance(mat, pd.DataFrame) and not mat.empty:
+                if 'Tribo' in mat.columns:
+                    tribos_disponiveis.extend(mat['Tribo'].unique().tolist())
+                    
+            if isinstance(aloc, pd.DataFrame) and not aloc.empty:
+                if 'tribe' in aloc.columns:
+                    tribos_disponiveis.extend(aloc['tribe'].unique().tolist())
+                elif 'Tribo' in aloc.columns:
+                    tribos_disponiveis.extend(aloc['Tribo'].unique().tolist())
+            
+            tribos_disponiveis = list(set([t for t in tribos_disponiveis if t and pd.notna(t)]))
+            if tribos_disponiveis:
+                contexto.append(f"Tribos disponíveis: {', '.join(tribos_disponiveis)}")
+                contexto.append(f"Total de tribos: {len(tribos_disponiveis)}")
+                
+            # Estatísticas gerais sobre tribos
+            if isinstance(mat, pd.DataFrame) and not mat.empty and 'Maturidade' in mat.columns:
+                contexto.append(f"Maturidade média geral: {mat['Maturidade'].mean():.1f}")
+                contexto.append(f"Maturidade mínima: {mat['Maturidade'].min():.1f}")
+                contexto.append(f"Maturidade máxima: {mat['Maturidade'].max():.1f}")        # Caso da análise geral de squads
+        elif tipo_entidade == 'squad_geral':
+            contexto.append("=== Visão Geral dos Squads ===")
+            
+        # Caso de análise geral quando não foi possível identificar a entidade
+        elif tipo_entidade == 'analise_geral':
+            contexto.append("=== Análise Geral da Organização ===")
+            
+            # Listar todos os squads disponíveis
+            squads_disponiveis = []
+            if isinstance(aloc, pd.DataFrame) and not aloc.empty:
+                if 'squad' in aloc.columns:
+                    squads_disponiveis.extend(aloc['squad'].unique().tolist())
+                elif 'Squad' in aloc.columns:
+                    squads_disponiveis.extend(aloc['Squad'].unique().tolist())
+            
+            squads_disponiveis = list(set([s for s in squads_disponiveis if s and pd.notna(s)]))
+            if squads_disponiveis:
+                # Não listar todos os squads se forem muitos, apenas mostrar a contagem
+                if len(squads_disponiveis) > 10:
+                    contexto.append(f"Total de squads: {len(squads_disponiveis)}")
+                    contexto.append(f"Exemplos de squads: {', '.join(squads_disponiveis[:5])}")
+                else:
+                    contexto.append(f"Squads disponíveis: {', '.join(squads_disponiveis)}")
+                    contexto.append(f"Total de squads: {len(squads_disponiveis)}")
+            
+            # Estatísticas gerais sobre squads
+            if isinstance(aloc, pd.DataFrame) and not aloc.empty:
+                if 'squad' in aloc.columns and 'person' in aloc.columns:
+                    pessoas_por_squad = aloc.groupby('squad')['person'].nunique()
+                    if not pessoas_por_squad.empty:
+                        contexto.append(f"Média de pessoas por squad: {pessoas_por_squad.mean():.1f}")
+                        contexto.append(f"Mínimo de pessoas por squad: {pessoas_por_squad.min()}")
+                        contexto.append(f"Máximo de pessoas por squad: {pessoas_por_squad.max()}")
+                        
+                if 'role' in aloc.columns:
+                    papeis = Counter(aloc['role'])
+                    contexto.append(f"Papéis mais comuns: {dict(papeis.most_common(5))}")
+        
+        # Buscar dados adicionais em outros dataframes que possam ter relação com a entidade
+        # Analisar dados em outros dataframes (storylog, demandas, etc.)
+        for key, df in dados.items():
+            # Pular chaves que já processamos ou que não são dataframes
+            if key in ['metricas', 'maturidade', 'alocacao', 'dados_cruzados'] or not isinstance(df, pd.DataFrame) or df.empty:
+                continue
+                
+            # Verificar se há colunas relacionadas a tribo ou squad
+            entity_columns = [col for col in df.columns if 'tribo' in col.lower() or 'tribe' in col.lower() or 'squad' in col.lower()]
+            
+            if entity_columns and nome_norm:
+                for col in entity_columns:
+                    filtered_df = df[df[col].apply(lambda x: unidecode(str(x).lower()) == nome_norm if pd.notna(x) else False)]
+                    if not filtered_df.empty:
+                        contexto.append(f"=== Dados adicionais de {key} ===")
+                        contexto.append(f"Registros encontrados: {len(filtered_df)}")
+                        
+                        # Analisar colunas numéricas
+                        num_cols = filtered_df.select_dtypes(include=['int64', 'float64']).columns
+                        for num_col in num_cols[:3]:  # Limitar a 3 colunas numéricas
+                            if filtered_df[num_col].notna().sum() > 0:
+                                contexto.append(f"{num_col} (média): {filtered_df[num_col].mean():.2f}")
+                        
+                        # Analisar colunas de data
+                        date_cols = [c for c in filtered_df.columns if 'data' in c.lower() or 'date' in c.lower()]
+                        if date_cols:
+                            for date_col in date_cols[:2]:  # Limitar a 2 colunas de data
+                                if filtered_df[date_col].notna().sum() > 0:
+                                    try:
+                                        min_date = filtered_df[date_col].min()
+                                        max_date = filtered_df[date_col].max()
+                                        if pd.notna(min_date) and pd.notna(max_date):
+                                            contexto.append(f"{date_col}: de {min_date} até {max_date}")
+                                    except:
+                                        pass
+                                        
+                        # Se há coluna de status, mostrar estatísticas
+                        status_cols = [c for c in filtered_df.columns if 'status' in c.lower() or 'situacao' in c.lower() or 'state' in c.lower()]
+                        if status_cols:
+                            for status_col in status_cols[:1]:  # Limitar a 1 coluna de status
+                                status_counts = filtered_df[status_col].value_counts()
+                                if not status_counts.empty:
+                                    contexto.append(f"{status_col}: {dict(status_counts)}")
+                        
+                        # Adicionar métricas relevantes calculadas
+                        if key.lower() in ('demandas', 'stories', 'pbi', 'epicos'):
+                            # Aqui podemos calcular métricas específicas para demandas
+                            if 'status' in filtered_df.columns:
+                                contexto.append(f"Distribuição por status: {dict(filtered_df['status'].value_counts())}")
+                            
+                            # Contar itens por mês se houver data de criação
+                            date_created_cols = [c for c in filtered_df.columns if 'cria' in c.lower() or 'create' in c.lower()]
+                            if date_created_cols:
+                                try:
+                                    # Tentar análise de tendência mensal
+                                    filtered_df['month'] = pd.to_datetime(filtered_df[date_created_cols[0]]).dt.to_period('M')
+                                    por_mes = filtered_df['month'].value_counts().sort_index()
+                                    if len(por_mes) > 0:
+                                        contexto.append(f"Tendência mensal (últimos 3 meses): {dict(por_mes[-3:])}")
+                                except:
+                                    pass
+                        break
+                        
+        # Adicionar insights específicos relacionados à entidade
+        if nome_norm:
+            all_insights = metricas.get('insights', [])
+            # Buscar por correspondências parciais no texto do insight
+            entity_insights = [i for i in all_insights if unidecode(entidade.lower()) in unidecode(i.lower())]
+            if entity_insights:
+                contexto.append(f"--- Insights específicos para {entidade} ---")
+                for insight in entity_insights[:3]:  # Limitar a 3 insights específicos
+                    contexto.append(insight)
+        
+        # Se ainda não houver contexto suficiente, tentar encontrar dados relacionados
+        if len(contexto) < 5:
+            # Procurar dados relacionados à consulta
+            dados_cruzados = dados.get('dados_cruzados', pd.DataFrame())
+            if isinstance(dados_cruzados, pd.DataFrame) and not dados_cruzados.empty:
+                contexto.append("=== Dados Relacionados ===")
+                # Adicionar número total de registros
+                contexto.append(f"Total de registros: {len(dados_cruzados)}")
+                # Adicionar informações sobre as colunas disponíveis
+                if dados_cruzados.columns.size > 0:
+                    contexto.append(f"Colunas disponíveis: {', '.join(dados_cruzados.columns[:10])}...")
+                    
+                    # Verificar se há colunas específicas que podem ser relevantes
+                    # Colunas de tempo/prazo
+                    prazo_cols = [col for col in dados_cruzados.columns if 'prazo' in col.lower() or 'time' in col.lower() or 'lead' in col.lower()]
+                    if prazo_cols:
+                        for col in prazo_cols[:2]:
+                            if dados_cruzados[col].dtype in ['int64', 'float64'] and dados_cruzados[col].notna().sum() > 0:
+                                contexto.append(f"{col} (média): {dados_cruzados[col].mean():.2f}")
+                    
+                    # Colunas de esforço/complexidade/story points
+                    esforco_cols = [col for col in dados_cruzados.columns if 'esforco' in col.lower() or 'points' in col.lower() or 'complex' in col.lower()]
+                    if esforco_cols:
+                        for col in esforco_cols[:2]:
+                            if dados_cruzados[col].dtype in ['int64', 'float64'] and dados_cruzados[col].notna().sum() > 0:
+                                contexto.append(f"{col} (média): {dados_cruzados[col].mean():.2f}")
+        
+        # Se ainda não houver contexto, adicionar uma mensagem padrão
+        if not contexto:
+            contexto.append("Dados insuficientes para análise detalhada.")
+            contexto.append("Sugiro validar os arquivos de entrada ou realizar nova importação.")
+            
+        # Adicionar sempre uma base de análise com termos técnicos relevantes
+        contexto.append("=== Conceitos em Business Agility ===")
+        
+        # Adicionar explicação sobre os termos para enriquecer o contexto
+        contexto.append("Lead Time: tempo desde a criação da demanda até sua entrega.")
+        contexto.append("Cycle Time: tempo efetivo de trabalho em uma demanda.")
+        contexto.append("WIP (Work in Progress): quantidade de itens sendo trabalhados simultaneamente.")
+        contexto.append("Throughput: taxa de entrega de itens por período.")
+        contexto.append("Flow Efficiency: porcentagem do tempo total em que o item efetivamente teve trabalho realizado.")
+        contexto.append("Organizational Topologies: estrutura organizacional que influencia a eficiência dos times.")
+          # Adicionar estrutura organizacional se disponível
+        org_structure = dados.get('estrutura_organizacional', {})
+        if isinstance(org_structure, dict) and org_structure:
+            contexto.append("=== Estrutura Organizacional ===")
+            
+            # Verificar informações sobre tribos na estrutura
+            if 'tribos' in org_structure and isinstance(org_structure['tribos'], dict):
+                tribos_info = org_structure['tribos']
+                # Se a entidade é uma tribo, adicionar informações específicas
+                if is_tribo and entidade.lower() in [t.lower() for t in tribos_info]:
+                    for tribo_nome, tribo_info in tribos_info.items():
+                        if unidecode(tribo_nome.lower()) == nome_norm:
+                            if isinstance(tribo_info, dict):
+                                for key, value in tribo_info.items():
+                                    if key != 'squads':  # Tratamos squads separadamente
+                                        contexto.append(f"{key}: {value}")
+                                
+                                # Adicionar informações sobre squads da tribo
+                                if 'squads' in tribo_info and isinstance(tribo_info['squads'], list):
+                                    squads_da_tribo = tribo_info['squads']
+                                    contexto.append(f"Squads na tribo: {len(squads_da_tribo)}")
+                                    if len(squads_da_tribo) <= 10:
+                                        contexto.append(f"Lista de squads: {', '.join(squads_da_tribo)}")
+                                    else:
+                                        contexto.append(f"Amostra de squads: {', '.join(squads_da_tribo[:5])}")
+                            break
+                else:
+                    # Informações gerais de tribos
+                    contexto.append(f"Número de tribos na organização: {len(tribos_info)}")
+                    
+            # Verificar informações sobre papéis na organização
+            if 'roles' in org_structure and isinstance(org_structure['roles'], dict):
+                roles_info = org_structure['roles']
+                contexto.append(f"Papéis na organização: {', '.join(roles_info.keys())}")
+        
+        # Log de diagnóstico para verificar o que está sendo fornecido para a consulta
+        logging.debug(f"Entidade: {entidade}, Tipo identificado: {tipo_entidade}, Nome normalizado: {nome_norm}")
+        logging.debug(f"Número de itens no contexto: {len(contexto)}")
+        
+        # Gerar resposta com OpenAI
+        prompt = f"""
+        Consulta: {query}
+        
+        Contexto:
+        {chr(10).join(contexto)}
+        
+        Dados sobre entidade: {entidade}
+        Tipo de entidade: {tipo_entidade if tipo_entidade else "não identificado"}
+        
+        Por favor, forneça uma resposta objetiva e profissional baseada no contexto acima.
+        Se os dados forem insuficientes, indique isso claramente e sugira o que poderia ser feito para melhorar a qualidade da análise.
+        
+        Formate sua resposta em tópicos quando houver múltiplos aspectos a serem destacados.
+        Destaque insights relevantes sobre a entidade analisada.
+        """
+        
+        try:
+            completion = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "Você é um consultor especialista em Business Agility e análise de dados de equipes ágeis"},
+                    {"role": "user", "content": prompt}
+                ]
+            )            
+            return completion.choices[0].message.content
+        
+        except Exception as e:
+            logging.error(f"Erro ao gerar resposta com API: {str(e)}")
+            return f"Análise indisponível no momento. Erro na integração com IA: {str(e)}"
+        
+    except Exception as e:
+        logging.error(f"Erro ao gerar resposta: {str(e)}")
+        tb_str = traceback.format_exc()
+        logging.error(f"Stack trace: {tb_str}")
+        return f"Desculpe, não foi possível gerar uma resposta: {str(e)}"
+
+def normalizar_texto(texto):
+    """Normaliza texto removendo acentos, espaços extras e convertendo para minúsculo"""
+    if pd.isna(texto):
+        return ""
+    texto = str(texto).lower().strip()
+    # Remover acentos
+    texto = unidecode(texto)
+    # Remover caracteres especiais
+    texto = re.sub(r'[^a-z0-9\s]', '', texto)
+    # Substituir múltiplos espaços por um único
+    texto = re.sub(r'\s+', ' ', texto)
+    return texto.strip()
+
+def normalizar_nome(nome):
+    """Alias para normalizar_texto para manter compatibilidade com código existente"""
+    return normalizar_texto(nome)

@@ -1,0 +1,33 @@
+"""
+Instruções para Aplicar Correções Manuais
+======================================
+
+Para corrigir os problemas do Agente Insights:
+
+1. Abra o arquivo `e:\Projeto\Agente_Insights\agenteinsights\analise_insights.py`
+
+2. Substitua a função `chat_ia_loop` atual pela versão corrigida em `chat_ia_loop_corrigido.py`
+
+3. Substitua a função `mapear_estrutura_org` atual pela versão corrigida em `mapear_estrutura_org_corrigido.py`
+
+4. Substitua a função `gerar_resposta_contextualizada` atual pela versão corrigida em `gerar_resposta_contextualizada_corrigido.py`
+
+5. Atualize a versão no arquivo `insights.py`:
+   - Altere "v1.5.1" para "v1.5.2"
+   - Altere "Release 5" para "Release 6"
+
+Após aplicar as correções, execute o teste:
+```
+python teste_maturidade_tribos.py
+```
+
+E então execute o sistema principal:
+```
+python insights.py
+```
+
+As correções abordam os seguintes problemas:
+1. EOF errors no chat loop
+2. Processamento correto de maturidade para 15 tribos
+3. Tratamento de valores None
+"""

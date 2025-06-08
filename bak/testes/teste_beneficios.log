@@ -1,0 +1,187 @@
+2025-06-04 16:06:12,879 - INFO - Iniciando teste da tribo Benefícios...
+2025-06-04 16:06:16,191 - INFO - Dados carregados. Tipos de dados: <class 'dict'>
+2025-06-04 16:06:16,192 - INFO - Chaves no dicionário: dict_keys(['maturidade', 'alocacao', 'executivo'])
+2025-06-04 16:06:16,192 - INFO - Dados de alocação carregados: 1014 registros
+2025-06-04 16:06:16,193 - INFO - Tribos disponíveis: ['Habilitador' 'Semparar.com' 'Benefícios' 'Atendimento' 'Insurtech'
+ 'Super App' 'Tag' 'Fuel' 'Estacione' 'Abastece' 'Condomínios'
+ 'Sem Parar Mais' 'Vendas' 'MX' 'Urbano' 'Fintech' 'Colaborador'
+ 'Vale Pedágio' 'Ofertas Sinérgicas' 'Drive' 'Pool' 'JV - Caixa']
+2025-06-04 16:06:16,193 - INFO - Tribo Benefícios encontrada. Executando análise...
+2025-06-04 16:06:16,196 - INFO - Registros após filtros de tribo/squad: 102
+2025-06-04 16:06:16,197 - INFO - Registros após filtro de data: 56
+2025-06-04 16:06:16,199 - INFO - Convertendo valores percentuais em texto para numérico: ['100', '50', '100']
+2025-06-04 16:06:16,199 - INFO - Dados inválidos em percetageAllocation: 0 registros
+2025-06-04 16:06:16,201 - INFO - Convertendo percentuais para decimal (0-1). Média após conversão: 0.87
+2025-06-04 16:06:16,282 - INFO - Colunas disponíveis: ['allocationId', 'number', 'person', 'personID', 'personEmail', 'tribeID', 'tribe', 'squadID', 'squad', 'role', 'roleID', 'percetageAllocation', 'startDate', 'endDate', 'active', 'type', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy']
+2025-06-04 16:06:16,282 - INFO - Total registros inicial: 1014
+2025-06-04 16:06:16,283 - INFO - Tribo buscada (normalizada): beneficios
+2025-06-04 16:06:16,283 - INFO - Coluna tribe_norm não encontrada, criando...
+2025-06-04 16:06:16,287 - INFO - Tribos disponíveis (normalizadas): ['abastece', 'atendimento', 'beneficios', 'colaborador', 'condominios', 'drive', 'estacione', 'fintech', 'fuel', 'habilitador', 'insurtech', 'jv caixa', 'mx', 'ofertas sinergicas', 'pool', 'sem parar mais', 'sempararcom', 'super app', 'tag', 'urbano', 'vale pedagio', 'vendas']
+2025-06-04 16:06:16,289 - INFO - Registros após filtro de tribo: 102
+2025-06-04 17:12:21,221 - INFO - Iniciando teste da tribo Benefícios...
+2025-06-04 17:12:23,453 - INFO - Dados carregados. Tipos de dados: <class 'dict'>
+2025-06-04 17:12:23,454 - INFO - Chaves no dicionário: dict_keys(['maturidade', 'alocacao', 'executivo'])
+2025-06-04 17:12:23,454 - INFO - Dados de alocação carregados: 1014 registros
+2025-06-04 17:12:23,455 - INFO - Tribos disponíveis: ['Habilitador' 'Semparar.com' 'Benefícios' 'Atendimento' 'Insurtech'
+ 'Super App' 'Tag' 'Fuel' 'Estacione' 'Abastece' 'Condomínios'
+ 'Sem Parar Mais' 'Vendas' 'MX' 'Urbano' 'Fintech' 'Colaborador'
+ 'Vale Pedágio' 'Ofertas Sinérgicas' 'Drive' 'Pool' 'JV - Caixa']
+2025-06-04 17:12:23,455 - INFO - Tribo Benefícios encontrada. Executando análise...
+2025-06-04 17:12:23,455 - INFO - Criando coluna tribe_norm para filtragem consistente
+2025-06-04 17:12:23,458 - INFO - Buscando por tribo normalizada: 'beneficios'
+2025-06-04 17:12:23,459 - INFO - Filtrando por tribe_norm = 'beneficios'
+2025-06-04 17:12:23,459 - INFO - Registros após filtro de tribo: 102
+2025-06-04 17:12:23,461 - INFO - Registros após filtro de data: 56
+2025-06-04 17:12:23,461 - INFO - Coluna de percentual de alocação encontrada: percetageAllocation
+2025-06-04 17:12:23,461 - INFO - Processando coluna percetageAllocation
+2025-06-04 17:12:23,461 - INFO - Amostras de valores antes da conversão: ['100%', '100%', '100%', '100%', '100%']
+2025-06-04 17:12:23,462 - INFO - Valores após limpeza: ['100', '50', '100']
+2025-06-04 17:12:23,462 - INFO - Valores de percentual: min=5, max=100, mean=86.51785714285714
+2025-06-04 17:12:23,463 - INFO - Convertendo percentuais para decimal (0-1)
+2025-06-04 17:12:23,463 - INFO - Valores após normalização: min=0.05, max=1.0, mean=0.8651785714285715
+2025-06-04 17:12:23,473 - INFO - Colunas disponíveis: ['allocationId', 'number', 'person', 'personID', 'personEmail', 'tribeID', 'tribe', 'squadID', 'squad', 'role', 'roleID', 'percetageAllocation', 'startDate', 'endDate', 'active', 'type', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy']
+2025-06-04 17:12:23,473 - INFO - Total registros inicial: 1014
+2025-06-04 17:12:23,473 - INFO - Tribo buscada (normalizada): 'beneficios'
+2025-06-04 17:12:23,473 - INFO - Coluna tribe_norm não encontrada, criando...
+2025-06-04 17:12:23,476 - INFO - Tribos disponíveis (normalizadas): ['abastece', 'atendimento', 'beneficios', 'colaborador', 'condominios', 'drive', 'estacione', 'fintech', 'fuel', 'habilitador', 'insurtech', 'jv caixa', 'mx', 'ofertas sinergicas', 'pool', 'sem parar mais', 'sempararcom', 'super app', 'tag', 'urbano', 'vale pedagio', 'vendas']
+2025-06-04 17:12:23,477 - INFO - Registros após filtro de tribo: 102
+2025-06-04 17:12:23,477 - INFO - Coluna mapeada: issue_type -> type
+2025-06-04 17:12:23,477 - INFO - Coluna mapeada: squad -> squad
+2025-06-04 17:12:23,478 - INFO - Coluna mapeada: tribe -> tribe
+2025-06-04 17:12:23,478 - INFO - Coluna mapeada: data -> startDate
+2025-06-04 17:12:23,478 - INFO - Coluna mapeada: issue_id -> allocationId
+2025-06-04 17:12:23,478 - WARNING - Colunas não encontradas: {'status', 'cycle_time', 'lead_time'}
+2025-06-04 17:12:23,478 - INFO - Mapeamento de colunas: {'issue_type': 'type', 'squad': 'squad', 'tribe': 'tribe', 'data': 'startDate', 'issue_id': 'allocationId'}
+2025-06-04 17:12:23,479 - ERROR - Erro ao analisar métricas ágeis: cannot access local variable 'throughput_diario' where it is not associated with a value
+2025-06-05 16:33:02,475 - INFO - Iniciando teste da tribo Benefícios...
+2025-06-05 16:33:11,983 - INFO - Dados carregados. Tipos de dados: <class 'dict'>
+2025-06-05 16:33:11,983 - INFO - Chaves no dicionário: dict_keys(['maturidade', 'alocacao', 'executivo'])
+2025-06-05 16:33:11,983 - INFO - Dados de alocação carregados: 1014 registros
+2025-06-05 16:33:11,989 - INFO - Tribos disponíveis: ['Habilitador' 'Semparar.com' 'Benefícios' 'Atendimento' 'Insurtech'
+ 'Super App' 'Tag' 'Fuel' 'Estacione' 'Abastece' 'Condomínios'
+ 'Sem Parar Mais' 'Vendas' 'MX' 'Urbano' 'Fintech' 'Colaborador'
+ 'Vale Pedágio' 'Ofertas Sinérgicas' 'Drive' 'Pool' 'JV - Caixa']
+2025-06-05 16:33:11,989 - INFO - Tribo Benefícios encontrada. Executando análise...
+2025-06-05 16:33:11,990 - WARNING - Colunas ausentes para análise de alocação: ['percentageAllocation']
+2025-06-05 16:33:12,018 - ERROR - Erro ao analisar métricas ágeis: 'Tribo'
+2025-06-05 17:11:58,094 - INFO - Iniciando teste da tribo Benefícios...
+2025-06-05 17:28:03,837 - INFO - Iniciando teste da tribo Benefícios...
+2025-06-05 17:28:06,400 - INFO - Dados carregados. Tipos de dados: <class 'dict'>
+2025-06-05 17:28:06,400 - INFO - Chaves no dicionário: dict_keys(['maturidade', 'alocacao', 'executivo'])
+2025-06-05 17:28:06,400 - INFO - Dados de alocação carregados: 1014 registros
+2025-06-05 17:28:06,401 - INFO - Tribos disponíveis: ['Habilitador' 'Semparar.com' 'Benefícios' 'Atendimento' 'Insurtech'
+ 'Super App' 'Tag' 'Fuel' 'Estacione' 'Abastece' 'Condomínios'
+ 'Sem Parar Mais' 'Vendas' 'MX' 'Urbano' 'Fintech' 'Colaborador'
+ 'Vale Pedágio' 'Ofertas Sinérgicas' 'Drive' 'Pool' 'JV - Caixa']
+2025-06-05 17:28:06,401 - INFO - Tribo Benefícios encontrada. Executando análise...
+2025-06-05 17:28:06,402 - WARNING - Colunas ausentes para análise de alocação: ['percentageAllocation']
+2025-06-05 17:28:06,405 - INFO - Match exato encontrado para issue_type: type
+2025-06-05 17:28:06,405 - INFO - Match exato encontrado para squad: squad
+2025-06-05 17:28:06,405 - INFO - Match exato encontrado para tribo: tribe
+2025-06-05 17:28:06,406 - INFO - Match parcial encontrado para data: startDate
+2025-06-05 17:28:06,406 - INFO - Match parcial encontrado para issue_id: allocationId
+2025-06-05 17:28:06,406 - INFO - Mapeamento final de colunas: {'issue_type': 'type', 'squad': 'squad', 'tribo': 'tribe', 'data': 'startDate', 'issue_id': 'allocationId'}
+2025-06-05 17:28:06,406 - INFO - Colunas não mapeadas: ['lead_time', 'cycle_time', 'status']
+2025-06-05 17:28:06,419 - INFO - Dados filtrados para tribo 'Benefícios': 102 registros
+2025-06-05 17:28:06,419 - WARNING - Coluna de status não encontrada, usando status artificial
+2025-06-05 17:41:47,368 - INFO - Iniciando teste da tribo Benefícios...
+2025-06-05 17:41:50,102 - INFO - Dados carregados. Tipos de dados: <class 'dict'>
+2025-06-05 17:41:50,102 - INFO - Chaves no dicionário: dict_keys(['maturidade', 'alocacao', 'executivo'])
+2025-06-05 17:41:50,103 - INFO - Dados de alocação carregados: 1014 registros
+2025-06-05 17:41:50,104 - INFO - Tribos disponíveis: ['Habilitador' 'Semparar.com' 'Benefícios' 'Atendimento' 'Insurtech'
+ 'Super App' 'Tag' 'Fuel' 'Estacione' 'Abastece' 'Condomínios'
+ 'Sem Parar Mais' 'Vendas' 'MX' 'Urbano' 'Fintech' 'Colaborador'
+ 'Vale Pedágio' 'Ofertas Sinérgicas' 'Drive' 'Pool' 'JV - Caixa']
+2025-06-05 17:41:50,105 - INFO - Tribo Benefícios encontrada. Executando análise...
+2025-06-05 17:41:50,106 - INFO - Coluna de percentual de alocação encontrada: percetageAllocation
+2025-06-05 17:41:50,117 - ERROR - Erro ao analisar alocação: agg function failed [how->mean,dtype->object]
+2025-06-05 17:41:50,121 - INFO - Match exato encontrado para issue_type: type
+2025-06-05 17:41:50,122 - INFO - Match exato encontrado para squad: squad
+2025-06-05 17:41:50,122 - INFO - Match exato encontrado para tribo: tribe
+2025-06-05 17:41:50,122 - INFO - Match parcial encontrado para data: startDate
+2025-06-05 17:41:50,123 - INFO - Match parcial encontrado para issue_id: allocationId
+2025-06-05 17:41:50,123 - INFO - Mapeamento final de colunas: {'issue_type': 'type', 'squad': 'squad', 'tribo': 'tribe', 'data': 'startDate', 'issue_id': 'allocationId'}
+2025-06-05 17:41:50,123 - INFO - Colunas não mapeadas: ['lead_time', 'cycle_time', 'status']
+2025-06-05 17:41:50,133 - INFO - Dados filtrados para tribo 'Benefícios': 102 registros
+2025-06-05 17:41:50,133 - WARNING - Coluna de status não encontrada, usando status artificial
+2025-06-05 18:05:30,050 - INFO - Iniciando teste da tribo Benefícios...
+2025-06-05 18:05:33,000 - INFO - Dados carregados. Tipos de dados: <class 'dict'>
+2025-06-05 18:05:33,001 - INFO - Chaves no dicionário: dict_keys(['maturidade', 'alocacao', 'executivo'])
+2025-06-05 18:05:33,001 - INFO - Dados de alocação carregados: 1014 registros
+2025-06-05 18:05:33,002 - INFO - Tribos disponíveis: ['Habilitador' 'Semparar.com' 'Benefícios' 'Atendimento' 'Insurtech'
+ 'Super App' 'Tag' 'Fuel' 'Estacione' 'Abastece' 'Condomínios'
+ 'Sem Parar Mais' 'Vendas' 'MX' 'Urbano' 'Fintech' 'Colaborador'
+ 'Vale Pedágio' 'Ofertas Sinérgicas' 'Drive' 'Pool' 'JV - Caixa']
+2025-06-05 18:05:33,002 - INFO - Tribo Benefícios encontrada. Executando análise...
+2025-06-05 18:05:33,003 - INFO - Coluna de percentual encontrada: percetageAllocation
+2025-06-05 18:05:33,007 - INFO - Registros após filtros de tribo/squad: 56
+2025-06-05 18:05:33,007 - INFO - Processando coluna percetageAllocation
+2025-06-05 18:05:33,008 - INFO - Amostras de valores antes da conversão: ['100%', '50%', '100%', '100%', '100%']
+2025-06-05 18:05:33,009 - INFO - Valores após limpeza: [100, 50, 100]
+2025-06-05 18:05:33,009 - INFO - Dados inválidos em percetageAllocation: 0 registros
+2025-06-05 18:05:33,009 - INFO - Valores de percentual: min=5, max=100, mean=86.51785714285714
+2025-06-05 18:05:33,010 - INFO - Convertendo percentuais para decimal (0-1)
+2025-06-05 18:05:33,010 - INFO - Valores após normalização: min=0.05, max=1.0, mean=0.8651785714285715
+2025-06-05 18:05:33,021 - INFO - Match exato encontrado para issue_type: type
+2025-06-05 18:05:33,022 - INFO - Match exato encontrado para squad: squad
+2025-06-05 18:05:33,022 - INFO - Match exato encontrado para tribo: tribe
+2025-06-05 18:05:33,022 - INFO - Match parcial encontrado para data: startDate
+2025-06-05 18:05:33,022 - INFO - Match parcial encontrado para issue_id: allocationId
+2025-06-05 18:05:33,023 - INFO - Mapeamento final de colunas: {'issue_type': 'type', 'squad': 'squad', 'tribo': 'tribe', 'data': 'startDate', 'issue_id': 'allocationId'}
+2025-06-05 18:05:33,023 - INFO - Colunas não mapeadas: ['lead_time', 'cycle_time', 'status']
+2025-06-05 18:05:33,032 - INFO - Dados filtrados para tribo 'Benefícios': 102 registros
+2025-06-05 18:05:33,033 - WARNING - Coluna de status não encontrada, usando status artificial
+2025-06-05 18:23:51,370 - INFO - Iniciando teste da tribo Benefícios...
+2025-06-05 18:23:56,272 - INFO - Dados carregados. Tipos de dados: <class 'dict'>
+2025-06-05 18:23:56,273 - INFO - Chaves no dicionário: dict_keys(['maturidade', 'alocacao', 'executivo'])
+2025-06-05 18:23:56,273 - INFO - Dados de alocação carregados: 1014 registros
+2025-06-05 18:23:56,275 - INFO - Tribos disponíveis: ['Habilitador' 'Semparar.com' 'Benefícios' 'Atendimento' 'Insurtech'
+ 'Super App' 'Tag' 'Fuel' 'Estacione' 'Abastece' 'Condomínios'
+ 'Sem Parar Mais' 'Vendas' 'MX' 'Urbano' 'Fintech' 'Colaborador'
+ 'Vale Pedágio' 'Ofertas Sinérgicas' 'Drive' 'Pool' 'JV - Caixa']
+2025-06-05 18:23:56,275 - INFO - Tribo Benefícios encontrada. Executando análise...
+2025-06-05 18:23:56,276 - INFO - Coluna de percentual encontrada: percetageAllocation
+2025-06-05 18:23:56,285 - INFO - Registros após filtros de tribo/squad: 56
+2025-06-05 18:23:56,286 - INFO - Processando coluna percetageAllocation
+2025-06-05 18:23:56,286 - INFO - Amostras de valores antes da conversão: ['100%', '50%', '100%', '100%', '100%']
+2025-06-05 18:23:56,287 - INFO - Valores após limpeza: [100, 50, 100]
+2025-06-05 18:23:56,287 - INFO - Dados inválidos em percetageAllocation: 0 registros
+2025-06-05 18:23:56,288 - INFO - Valores de percentual: min=5, max=100, mean=86.51785714285714
+2025-06-05 18:23:56,288 - INFO - Convertendo percentuais para decimal (0-1)
+2025-06-05 18:23:56,288 - INFO - Valores após normalização: min=0.05, max=1.0, mean=0.8651785714285715
+2025-06-05 18:23:56,307 - INFO - Match exato encontrado para issue_type: type
+2025-06-05 18:23:56,307 - INFO - Match exato encontrado para squad: squad
+2025-06-05 18:23:56,308 - INFO - Match exato encontrado para tribo: tribe
+2025-06-05 18:23:56,308 - INFO - Match parcial encontrado para data: startDate
+2025-06-05 18:23:56,308 - INFO - Match parcial encontrado para issue_id: allocationId
+2025-06-05 18:23:56,308 - INFO - Mapeamento final de colunas: {'issue_type': 'type', 'squad': 'squad', 'tribo': 'tribe', 'data': 'startDate', 'issue_id': 'allocationId'}
+2025-06-05 18:23:56,308 - INFO - Colunas não mapeadas: ['lead_time', 'cycle_time', 'status']
+2025-06-05 18:23:56,315 - INFO - Dados filtrados para tribo 'Benefícios': 102 registros
+2025-06-05 18:23:56,315 - WARNING - Coluna de status não encontrada, usando status artificial
+2025-06-05 18:26:34,902 - INFO - Iniciando teste da tribo Benefícios...
+2025-06-05 18:26:37,468 - INFO - Dados carregados. Tipos de dados: <class 'dict'>
+2025-06-05 18:26:37,468 - INFO - Chaves no dicionário: dict_keys(['maturidade', 'alocacao', 'executivo'])
+2025-06-05 18:26:37,468 - INFO - Dados de alocação carregados: 1014 registros
+2025-06-05 18:26:37,469 - INFO - Tribos disponíveis: ['Habilitador' 'Semparar.com' 'Benefícios' 'Atendimento' 'Insurtech'
+ 'Super App' 'Tag' 'Fuel' 'Estacione' 'Abastece' 'Condomínios'
+ 'Sem Parar Mais' 'Vendas' 'MX' 'Urbano' 'Fintech' 'Colaborador'
+ 'Vale Pedágio' 'Ofertas Sinérgicas' 'Drive' 'Pool' 'JV - Caixa']
+2025-06-05 18:26:37,469 - INFO - Tribo Benefícios encontrada. Executando análise...
+2025-06-05 18:26:37,470 - INFO - Coluna de percentual encontrada: percetageAllocation
+2025-06-05 18:26:37,479 - INFO - Registros após filtros de tribo/squad: 56
+2025-06-05 18:26:37,479 - INFO - Processando coluna percetageAllocation
+2025-06-05 18:26:37,479 - INFO - Amostras de valores antes da conversão: ['100%', '50%', '100%', '100%', '100%']
+2025-06-05 18:26:37,481 - INFO - Valores após limpeza: [100, 50, 100]
+2025-06-05 18:26:37,481 - INFO - Dados inválidos em percetageAllocation: 0 registros
+2025-06-05 18:26:37,482 - INFO - Valores de percentual: min=5, max=100, mean=86.51785714285714
+2025-06-05 18:26:37,482 - INFO - Convertendo percentuais para decimal (0-1)
+2025-06-05 18:26:37,483 - INFO - Valores após normalização: min=0.05, max=1.0, mean=0.8651785714285715
+2025-06-05 18:26:37,491 - INFO - Match exato encontrado para issue_type: type
+2025-06-05 18:26:37,491 - INFO - Match exato encontrado para squad: squad
+2025-06-05 18:26:37,492 - INFO - Match exato encontrado para tribo: tribe
+2025-06-05 18:26:37,492 - INFO - Match parcial encontrado para data: startDate
+2025-06-05 18:26:37,492 - INFO - Match parcial encontrado para issue_id: allocationId
+2025-06-05 18:26:37,492 - INFO - Mapeamento final de colunas: {'issue_type': 'type', 'squad': 'squad', 'tribo': 'tribe', 'data': 'startDate', 'issue_id': 'allocationId'}
+2025-06-05 18:26:37,492 - INFO - Colunas não mapeadas: ['lead_time', 'cycle_time', 'status']
+2025-06-05 18:26:37,497 - INFO - Dados filtrados para tribo 'Benefícios': 102 registros
+2025-06-05 18:26:37,498 - WARNING - Coluna de status não encontrada, usando status artificial

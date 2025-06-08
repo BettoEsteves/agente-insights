@@ -1,0 +1,21 @@
+README.md
+pyproject.toml
+setup.py
+agenteinsights/__init__.py
+agenteinsights/analise_insights.py
+agenteinsights/analise_insightsv1.py
+agenteinsights/analise_insightsv2 funcional ultrapassa tokens.py
+agenteinsights/analise_ml.py
+agenteinsights/config.py
+agenteinsights/cruzamento_dados.py
+agenteinsights/gerar_relatorio.py
+agenteinsights/insights.py
+agenteinsights/interacao_ia.py
+agenteinsights/leitura_e_verificacao.py
+agenteinsights/setup_env.py
+agenteinsights/test_insights.py
+agenteinsights.egg-info/PKG-INFO
+agenteinsights.egg-info/SOURCES.txt
+agenteinsights.egg-info/dependency_links.txt
+agenteinsights.egg-info/requires.txt
+agenteinsights.egg-info/top_level.txt

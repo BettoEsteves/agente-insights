@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=64.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agenteinsights"
+version = "1.5.0"
+description = "Agente de Insights para Business Agility"
+readme = "README.md"
+authors = [
+    { name = "Seu Nome", email = "seu.email@dominio.com" }
+]
+license = { file = "LICENSE" }
+requires-python = ">=3.8"
+dependencies = [
+    "pandas>=1.5.0",
+    "numpy>=1.21.0",
+    "scikit-learn>=1.0.0",
+    "matplotlib>=3.5.0",
+    "seaborn>=0.11.0",
+    "python-docx>=0.8.11",
+    "python-dotenv>=0.19.0",
+    "openai>=1.0.0",
+]
+
+[tool.setuptools]
+packages = ["agenteinsights"]

@@ -1,0 +1,115 @@
+"""
+Correção Manual - Função chat_ia_loop
+===================================
+Esta função corrigida deve substituir a função atual no arquivo analise_insights.py
+"""
+
+def chat_ia_loop(analises: Dict[str, Any]):
+    """Chat IA com suporte a consultas dinâmicas sobre estrutura organizacional"""
+    try:
+        load_dotenv()
+        client = OpenAI()
+        
+        # Inicializar contexto da conversa
+        contexto_conversa = []
+        
+        # Mapear estrutura organizacional
+        estrutura = mapear_estrutura_org(analises)
+        
+        # Validar estrutura
+        if not estrutura['tribos']:
+            msg_erro = "Não foi possível carregar a estrutura organizacional. Verificar dados de entrada."
+            logging.error(msg_erro)
+            print(f"\n❌ {msg_erro}")
+            return
+        
+        # Preparar prompt base com informações da estrutura
+        sistema_base = {
+            "role": "system",
+            "content": f"""Você é um consultor sênior especializado em Business Agility e Analytics.
+            
+            # Estrutura Organizacional
+            - Total de Tribos: {len(estrutura['tribos'])}
+            - Total de Squads: {estrutura['total_squads']}
+            - Total de Pessoas: {estrutura['total_pessoas']}
+            
+            # Tribos Disponíveis
+            {chr(10).join(f"- {tribo}" for tribo in estrutura['tribos'].keys())}
+            
+            # Papéis na Organização
+            {chr(10).join(f"- {papel}: {qtd}" for papel, qtd in estrutura.get('papeis_total', {}).items())}
+            """
+        }
+        
+        print("\n📊 Consultor Executivo - Business Agility & Analytics")
+        print(f"\nEstrutura Atual:")
+        print(f"- {len(estrutura['tribos'])} Tribos")
+        print(f"- {estrutura['total_squads']} Squads")
+        print(f"- {estrutura['total_pessoas']} Pessoas")
+        print("\nExemplos de consultas:")
+        print("- 'análise da tribo [nome da tribo]'")
+        print("- 'composição do squad [nome do squad]'")
+        print("- 'distribuição de papéis na tribo [nome da tribo]'")
+        print("- 'métricas da organização'")
+        print("\nDigite 'sair' para encerrar")
+        
+        max_erros_consecutivos = 0
+        max_erros_totais = 0
+        while True:
+            try:
+                # Mecanismo de recuperação para evitar loops infinitos
+                if max_erros_consecutivos >= 3 or max_erros_totais >= 5:
+                    logging.error(f"Muitos erros na entrada. Consecutivos: {max_erros_consecutivos}, Totais: {max_erros_totais}. Encerrando chat.")
+                    print("\n❌ Muitos erros de entrada detectados. Encerrando o chat.")
+                    break
+                
+                try:
+                    print("\nVocê: ", end='', flush=True)
+                    query = input().strip()
+                    max_erros_consecutivos = 0  # Reset contador de erros consecutivos após entrada bem-sucedida
+                    
+                    # Log de sucesso na leitura de entrada
+                    logging.debug("Entrada do usuário lida com sucesso")
+                    
+                except EOFError:
+                    logging.warning("Erro EOF ao ler entrada. Tentando recuperar...")
+                    max_erros_consecutivos += 1
+                    max_erros_totais += 1
+                    print("\n⚠️ Erro ao ler entrada (EOF). Digite novamente ou 'sair' para encerrar.")
+                    # Pequena pausa para evitar ciclo muito rápido
+                    import time
+                    time.sleep(0.5)
+                    continue
+                
+                if query.lower() == "sair":
+                    break
+                
+                # Log da consulta recebida
+                logging.info(f"Consulta recebida: '{query}'")
+                
+                # Identificar entidade (tribo/squad) na query
+                entidade, nome = identificar_entidade_consulta(query, estrutura)
+                logging.info(f"Entidade identificada: '{entidade}', Nome: '{nome}'")
+                
+                # Preparar dados específicos da consulta
+                dados_consulta = preparar_dados_consulta(entidade, nome, estrutura, analises)
+                
+                # Gerar resposta contextualizada
+                resposta = gerar_resposta_contextualizada(query, entidade, dados_consulta, client)
+                
+                # Atualizar contexto da conversa
+                contexto_conversa.append(("Você", query))
+                contexto_conversa.append(("IA", resposta))
+                
+                print(f"\n🤖 IA: {resposta}\n")
+                
+            except Exception as e:
+                logging.error(f"Erro no chat: {str(e)}")
+                traceback.print_exc()
+                print(f"\n❌ Ops! Tive um problema: {str(e)}")
+        
+        return contexto_conversa
+    except Exception as e:
+        logging.error(f"Erro ao iniciar chat: {str(e)}")
+        traceback.print_exc()
+        print(f"\n❌ Erro ao iniciar chat: {str(e)}")

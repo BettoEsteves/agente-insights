@@ -1,0 +1,163 @@
+2025-06-04 13:11:59,787 - INFO - Python path: ['E:\\Projeto\\Agente_Insights', 'E:\\Projeto\\Agente_Insights', 'C:\\Python313\\python313.zip', 'C:\\Python313\\DLLs', 'C:\\Python313\\Lib', 'C:\\Python313', 'E:\\Projeto\\Agente_Insights\\env', 'E:\\Projeto\\Agente_Insights\\env\\Lib\\site-packages']
+2025-06-04 13:12:10,316 - DEBUG - matplotlib data path: E:\Projeto\Agente_Insights\env\Lib\site-packages\matplotlib\mpl-data
+2025-06-04 13:12:10,345 - DEBUG - CONFIGDIR=C:\Users\b3Y0\.matplotlib
+2025-06-04 13:12:10,347 - DEBUG - interactive is False
+2025-06-04 13:12:10,347 - DEBUG - platform is win32
+2025-06-04 13:12:10,435 - DEBUG - CACHEDIR=C:\Users\b3Y0\.matplotlib
+2025-06-04 13:12:10,461 - DEBUG - Using fontManager instance from C:\Users\b3Y0\.matplotlib\fontlist-v390.json
+2025-06-04 13:12:12,723 - INFO - Módulos importados com sucesso!
+2025-06-04 13:12:12,724 - INFO - Iniciando teste da tribo Vendas...
+2025-06-04 13:12:13,562 - DEBUG - Colunas em maturidade: ['Chave_Tribo_Ano_Quarter', 'Chave_Tribo_Ano_Quarter_Psq_Maturidade', 'ID_Formulario', 'Ano', 'Quarter', 'ID_Tribo_Alocacao', 'Tribo', 'Maturidade']
+2025-06-04 13:12:13,563 - DEBUG - Colunas em alocacao: ['allocationId', 'number', 'person', 'personID', 'personEmail', 'tribeID', 'tribe', 'squadID', 'squad', 'role', 'roleID', 'percetageAllocation', 'startDate', 'endDate', 'active', 'type', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy']
+2025-06-04 13:12:13,563 - DEBUG - Colunas em executivo: []
+2025-06-04 14:57:11,626 - INFO - Python path: ['e:\\Projeto\\Agente_Insights', 'e:\\Projeto\\Agente_Insights', 'C:\\Python313\\python313.zip', 'C:\\Python313\\DLLs', 'C:\\Python313\\Lib', 'C:\\Python313', 'E:\\Projeto\\Agente_Insights\\env', 'E:\\Projeto\\Agente_Insights\\env\\Lib\\site-packages']
+2025-06-04 14:57:12,626 - DEBUG - matplotlib data path: E:\Projeto\Agente_Insights\env\Lib\site-packages\matplotlib\mpl-data
+2025-06-04 14:57:12,631 - DEBUG - CONFIGDIR=C:\Users\b3Y0\.matplotlib
+2025-06-04 14:57:12,632 - DEBUG - interactive is False
+2025-06-04 14:57:12,632 - DEBUG - platform is win32
+2025-06-04 14:57:12,688 - DEBUG - CACHEDIR=C:\Users\b3Y0\.matplotlib
+2025-06-04 14:57:12,690 - DEBUG - Using fontManager instance from C:\Users\b3Y0\.matplotlib\fontlist-v390.json
+2025-06-04 14:57:13,467 - INFO - Módulos importados com sucesso!
+2025-06-04 14:57:13,467 - INFO - Iniciando teste da tribo Vendas...
+2025-06-04 14:57:14,036 - DEBUG - Colunas em maturidade: ['Chave_Tribo_Ano_Quarter', 'Chave_Tribo_Ano_Quarter_Psq_Maturidade', 'ID_Formulario', 'Ano', 'Quarter', 'ID_Tribo_Alocacao', 'Tribo', 'Maturidade']
+2025-06-04 14:57:14,036 - DEBUG - Colunas em alocacao: ['allocationId', 'number', 'person', 'personID', 'personEmail', 'tribeID', 'tribe', 'squadID', 'squad', 'role', 'roleID', 'percetageAllocation', 'startDate', 'endDate', 'active', 'type', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy']
+2025-06-04 14:57:14,036 - DEBUG - Colunas em executivo: []
+2025-06-04 14:57:14,037 - DEBUG - Tipo de retorno de carregar_dados: <class 'dict'>
+2025-06-04 14:57:14,037 - DEBUG - Chaves no dicionário: dict_keys(['maturidade', 'alocacao', 'executivo'])
+2025-06-04 14:57:14,037 - DEBUG - DataFrame alocacao: (1014, 20) registros
+2025-06-04 14:57:14,037 - DEBUG - Colunas alocacao: ['allocationId', 'number', 'person', 'personID', 'personEmail', 'tribeID', 'tribe', 'squadID', 'squad', 'role', 'roleID', 'percetageAllocation', 'startDate', 'endDate', 'active', 'type', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy']
+2025-06-04 14:57:14,038 - INFO - Tribos disponíveis: ['Habilitador' 'Semparar.com' 'Benefícios' 'Atendimento' 'Insurtech'
+ 'Super App' 'Tag' 'Fuel' 'Estacione' 'Abastece' 'Condomínios'
+ 'Sem Parar Mais' 'Vendas' 'MX' 'Urbano' 'Fintech' 'Colaborador'
+ 'Vale Pedágio' 'Ofertas Sinérgicas' 'Drive' 'Pool' 'JV - Caixa']
+2025-06-04 14:57:14,039 - DEBUG - Tribos normalizadas: ['habilitador', 'semparar.com', 'benefícios', 'atendimento', 'insurtech', 'super app', 'tag', 'fuel', 'estacione', 'abastece', 'condomínios', 'sem parar mais', 'vendas', 'mx', 'urbano', 'fintech', 'colaborador', 'vale pedágio', 'ofertas sinérgicas', 'drive', 'pool', 'jv - caixa']
+2025-06-04 14:57:14,039 - INFO - Tribo Vendas encontrada como 'Vendas'. Executando análise...
+2025-06-04 14:57:14,039 - INFO - Padronizando nomes das tribos para merge...
+2025-06-04 14:57:14,039 - ERROR - Erro na padronização dos nomes das tribos: 'maturidade'
+2025-06-04 14:57:14,039 - ERROR - Erro ao analisar tribo Vendas: 'maturidade'
+2025-06-04 15:04:09,942 - INFO - Python path: ['e:\\Projeto\\Agente_Insights', 'e:\\Projeto\\Agente_Insights', 'C:\\Python313\\python313.zip', 'C:\\Python313\\DLLs', 'C:\\Python313\\Lib', 'C:\\Python313', 'E:\\Projeto\\Agente_Insights\\env', 'E:\\Projeto\\Agente_Insights\\env\\Lib\\site-packages']
+2025-06-04 15:57:20,281 - INFO - Python path: ['E:\\Projeto\\Agente_Insights', 'E:\\Projeto\\Agente_Insights', 'C:\\Python313\\python313.zip', 'C:\\Python313\\DLLs', 'C:\\Python313\\Lib', 'C:\\Python313', 'E:\\Projeto\\Agente_Insights\\env', 'E:\\Projeto\\Agente_Insights\\env\\Lib\\site-packages']
+2025-06-04 15:57:22,057 - DEBUG - matplotlib data path: E:\Projeto\Agente_Insights\env\Lib\site-packages\matplotlib\mpl-data
+2025-06-04 15:57:22,065 - DEBUG - CONFIGDIR=C:\Users\b3Y0\.matplotlib
+2025-06-04 15:57:22,068 - DEBUG - interactive is False
+2025-06-04 15:57:22,068 - DEBUG - platform is win32
+2025-06-04 15:57:22,167 - DEBUG - CACHEDIR=C:\Users\b3Y0\.matplotlib
+2025-06-04 15:57:22,171 - DEBUG - Using fontManager instance from C:\Users\b3Y0\.matplotlib\fontlist-v390.json
+2025-06-04 15:57:24,224 - INFO - Módulos importados com sucesso!
+2025-06-04 15:57:24,224 - INFO - Iniciando teste da tribo Vendas...
+2025-06-04 15:57:24,991 - DEBUG - Colunas em maturidade: ['Chave_Tribo_Ano_Quarter', 'Chave_Tribo_Ano_Quarter_Psq_Maturidade', 'ID_Formulario', 'Ano', 'Quarter', 'ID_Tribo_Alocacao', 'Tribo', 'Maturidade']
+2025-06-04 15:57:24,992 - DEBUG - Colunas em alocacao: ['allocationId', 'number', 'person', 'personID', 'personEmail', 'tribeID', 'tribe', 'squadID', 'squad', 'role', 'roleID', 'percetageAllocation', 'startDate', 'endDate', 'active', 'type', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy']
+2025-06-04 15:57:24,992 - DEBUG - Colunas em executivo: []
+2025-06-04 15:57:24,992 - DEBUG - Tipo de retorno de carregar_dados: <class 'dict'>
+2025-06-04 15:57:24,992 - DEBUG - Chaves no dicionário: dict_keys(['maturidade', 'alocacao', 'executivo'])
+2025-06-04 15:57:24,993 - DEBUG - DataFrame alocacao: (1014, 20) registros
+2025-06-04 15:57:24,993 - DEBUG - Colunas alocacao: ['allocationId', 'number', 'person', 'personID', 'personEmail', 'tribeID', 'tribe', 'squadID', 'squad', 'role', 'roleID', 'percetageAllocation', 'startDate', 'endDate', 'active', 'type', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy']
+2025-06-04 15:57:24,994 - INFO - Tribos disponíveis: ['Habilitador' 'Semparar.com' 'Benefícios' 'Atendimento' 'Insurtech'
+ 'Super App' 'Tag' 'Fuel' 'Estacione' 'Abastece' 'Condomínios'
+ 'Sem Parar Mais' 'Vendas' 'MX' 'Urbano' 'Fintech' 'Colaborador'
+ 'Vale Pedágio' 'Ofertas Sinérgicas' 'Drive' 'Pool' 'JV - Caixa']
+2025-06-04 15:57:24,994 - DEBUG - Tribos normalizadas: ['habilitador', 'semparar.com', 'benefícios', 'atendimento', 'insurtech', 'super app', 'tag', 'fuel', 'estacione', 'abastece', 'condomínios', 'sem parar mais', 'vendas', 'mx', 'urbano', 'fintech', 'colaborador', 'vale pedágio', 'ofertas sinérgicas', 'drive', 'pool', 'jv - caixa']
+2025-06-04 15:57:24,995 - INFO - Tribo Vendas encontrada como 'Vendas'. Executando análise...
+2025-06-04 15:57:24,999 - INFO - Registros após filtros de tribo/squad: 71
+2025-06-04 15:57:25,003 - INFO - Registros após filtro de data: 31
+2025-06-04 15:57:25,004 - INFO - Convertendo valores percentuais em texto para numérico: ['100', '15', '20']
+2025-06-04 15:57:25,005 - INFO - Dados inválidos em percetageAllocation: 0 registros
+2025-06-04 15:57:25,007 - INFO - Convertendo percentuais para decimal (0-1). Média após conversão: 0.81
+2025-06-04 15:57:25,031 - DEBUG - Análise de alocação: {'papeis': {'Agile Coach': 1, 'Agile Master': 1, 'Analista CRO': 2, 'Analista Designer': 1, 'Analista de Dados': 2, 'Analista de Marketing Digital': 1, 'Analista de Mídia Performance': 3, 'Analista de vendas Online': 1, 'Coordenador': 1, 'Desenvolvedor Frontend': 2, 'Desenvolvedor Fullstack': 4, 'Digital Analytics': 2, 'Engenheiro de Dados': 1, 'Especialista de Mídia e Dados': 1, 'Gerente Performance': 1, 'PO da Squad': 2, 'PO da Tribo': 1, 'QA': 2, 'Team Leader': 1, 'Ux writer': 1}, 'pessoas_multi_squad': ['Marcus Vinicius Campos Da Silva'], 'media_pessoas_squad': 10.0, 'alocacao_media': {'Pandas': 0.8400000000000001, 'Pixel': 0.7423076923076923, 'Vendas e Logística (Capivaras)': 0.9166666666666666}, 'composicao_squads': {'role': {'Pandas': {'Engenheiro de Dados': 1, 'Digital Analytics': 2, 'Analista de Dados': 1, 'Team Leader': 1}, 'Pixel': {'Analista de vendas Online': 1, 'Analista CRO': 2, 'Especialista de Mídia e Dados': 1, 'Analista de Mídia Performance': 3, 'Gerente Performance': 1, 'Analista Designer': 1, 'Analista de Marketing Digital': 1, 'Coordenador': 1, 'Analista de Dados': 1, 'Ux writer': 1}, 'Vendas e Logística (Capivaras)': {'PO da Tribo': 1, 'Desenvolvedor Frontend': 2, 'PO da Squad': 2, 'QA': 2, 'Desenvolvedor Fullstack': 4, 'Agile Master': 1}}, 'percetageAllocation': {'Pandas': 0.8400000000000001, 'Pixel': 0.7423076923076923, 'Vendas e Logística (Capivaras)': 0.9166666666666666}}}
+2025-06-04 15:57:25,032 - INFO - Colunas disponíveis: ['allocationId', 'number', 'person', 'personID', 'personEmail', 'tribeID', 'tribe', 'squadID', 'squad', 'role', 'roleID', 'percetageAllocation', 'startDate', 'endDate', 'active', 'type', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy']
+2025-06-04 15:57:25,032 - INFO - Total registros inicial: 1014
+2025-06-04 15:57:25,032 - INFO - Tribo buscada (normalizada): vendas
+2025-06-04 15:57:25,033 - ERROR - Erro ao analisar métricas ágeis: 'tribe_norm'
+2025-06-04 15:57:25,033 - ERROR - Erro ao analisar tribo Vendas: 'tribe_norm'
+2025-06-04 16:00:53,465 - INFO - Python path: ['E:\\Projeto\\Agente_Insights', 'E:\\Projeto\\Agente_Insights', 'C:\\Python313\\python313.zip', 'C:\\Python313\\DLLs', 'C:\\Python313\\Lib', 'C:\\Python313', 'E:\\Projeto\\Agente_Insights\\env', 'E:\\Projeto\\Agente_Insights\\env\\Lib\\site-packages']
+2025-06-04 16:00:55,286 - DEBUG - matplotlib data path: E:\Projeto\Agente_Insights\env\Lib\site-packages\matplotlib\mpl-data
+2025-06-04 16:00:55,292 - DEBUG - CONFIGDIR=C:\Users\b3Y0\.matplotlib
+2025-06-04 16:00:55,294 - DEBUG - interactive is False
+2025-06-04 16:00:55,294 - DEBUG - platform is win32
+2025-06-04 16:00:55,400 - DEBUG - CACHEDIR=C:\Users\b3Y0\.matplotlib
+2025-06-04 16:00:55,404 - DEBUG - Using fontManager instance from C:\Users\b3Y0\.matplotlib\fontlist-v390.json
+2025-06-04 16:00:56,876 - INFO - Módulos importados com sucesso!
+2025-06-04 16:00:56,876 - INFO - Iniciando teste da tribo Vendas...
+2025-06-04 16:00:57,640 - DEBUG - Colunas em maturidade: ['Chave_Tribo_Ano_Quarter', 'Chave_Tribo_Ano_Quarter_Psq_Maturidade', 'ID_Formulario', 'Ano', 'Quarter', 'ID_Tribo_Alocacao', 'Tribo', 'Maturidade']
+2025-06-04 16:00:57,640 - DEBUG - Colunas em alocacao: ['allocationId', 'number', 'person', 'personID', 'personEmail', 'tribeID', 'tribe', 'squadID', 'squad', 'role', 'roleID', 'percetageAllocation', 'startDate', 'endDate', 'active', 'type', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy']
+2025-06-04 16:00:57,641 - DEBUG - Colunas em executivo: []
+2025-06-04 16:00:57,641 - DEBUG - Tipo de retorno de carregar_dados: <class 'dict'>
+2025-06-04 16:00:57,641 - DEBUG - Chaves no dicionário: dict_keys(['maturidade', 'alocacao', 'executivo'])
+2025-06-04 16:00:57,642 - DEBUG - DataFrame alocacao: (1014, 20) registros
+2025-06-04 16:00:57,642 - DEBUG - Colunas alocacao: ['allocationId', 'number', 'person', 'personID', 'personEmail', 'tribeID', 'tribe', 'squadID', 'squad', 'role', 'roleID', 'percetageAllocation', 'startDate', 'endDate', 'active', 'type', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy']
+2025-06-04 16:00:57,643 - INFO - Tribos disponíveis: ['Habilitador' 'Semparar.com' 'Benefícios' 'Atendimento' 'Insurtech'
+ 'Super App' 'Tag' 'Fuel' 'Estacione' 'Abastece' 'Condomínios'
+ 'Sem Parar Mais' 'Vendas' 'MX' 'Urbano' 'Fintech' 'Colaborador'
+ 'Vale Pedágio' 'Ofertas Sinérgicas' 'Drive' 'Pool' 'JV - Caixa']
+2025-06-04 16:00:57,643 - DEBUG - Tribos normalizadas: ['habilitador', 'semparar.com', 'benefícios', 'atendimento', 'insurtech', 'super app', 'tag', 'fuel', 'estacione', 'abastece', 'condomínios', 'sem parar mais', 'vendas', 'mx', 'urbano', 'fintech', 'colaborador', 'vale pedágio', 'ofertas sinérgicas', 'drive', 'pool', 'jv - caixa']
+2025-06-04 16:00:57,643 - INFO - Tribo Vendas encontrada como 'Vendas'. Executando análise...
+2025-06-04 16:00:57,645 - INFO - Registros após filtros de tribo/squad: 71
+2025-06-04 16:00:57,646 - INFO - Registros após filtro de data: 31
+2025-06-04 16:00:57,648 - INFO - Convertendo valores percentuais em texto para numérico: ['100', '15', '20']
+2025-06-04 16:00:57,648 - INFO - Dados inválidos em percetageAllocation: 0 registros
+2025-06-04 16:00:57,651 - INFO - Convertendo percentuais para decimal (0-1). Média após conversão: 0.81
+2025-06-04 16:00:57,665 - DEBUG - Análise de alocação: {'papeis': {'Agile Coach': 1, 'Agile Master': 1, 'Analista CRO': 2, 'Analista Designer': 1, 'Analista de Dados': 2, 'Analista de Marketing Digital': 1, 'Analista de Mídia Performance': 3, 'Analista de vendas Online': 1, 'Coordenador': 1, 'Desenvolvedor Frontend': 2, 'Desenvolvedor Fullstack': 4, 'Digital Analytics': 2, 'Engenheiro de Dados': 1, 'Especialista de Mídia e Dados': 1, 'Gerente Performance': 1, 'PO da Squad': 2, 'PO da Tribo': 1, 'QA': 2, 'Team Leader': 1, 'Ux writer': 1}, 'pessoas_multi_squad': ['Marcus Vinicius Campos Da Silva'], 'media_pessoas_squad': 10.0, 'alocacao_media': {'Pandas': 0.8400000000000001, 'Pixel': 0.7423076923076923, 'Vendas e Logística (Capivaras)': 0.9166666666666666}, 'composicao_squads': {'role': {'Pandas': {'Engenheiro de Dados': 1, 'Digital Analytics': 2, 'Analista de Dados': 1, 'Team Leader': 1}, 'Pixel': {'Analista de vendas Online': 1, 'Analista CRO': 2, 'Especialista de Mídia e Dados': 1, 'Analista de Mídia Performance': 3, 'Gerente Performance': 1, 'Analista Designer': 1, 'Analista de Marketing Digital': 1, 'Coordenador': 1, 'Analista de Dados': 1, 'Ux writer': 1}, 'Vendas e Logística (Capivaras)': {'PO da Tribo': 1, 'Desenvolvedor Frontend': 2, 'PO da Squad': 2, 'QA': 2, 'Desenvolvedor Fullstack': 4, 'Agile Master': 1}}, 'percetageAllocation': {'Pandas': 0.8400000000000001, 'Pixel': 0.7423076923076923, 'Vendas e Logística (Capivaras)': 0.9166666666666666}}}
+2025-06-04 16:00:57,666 - INFO - Colunas disponíveis: ['allocationId', 'number', 'person', 'personID', 'personEmail', 'tribeID', 'tribe', 'squadID', 'squad', 'role', 'roleID', 'percetageAllocation', 'startDate', 'endDate', 'active', 'type', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy']
+2025-06-04 16:00:57,667 - INFO - Total registros inicial: 1014
+2025-06-04 16:00:57,667 - INFO - Tribo buscada (normalizada): vendas
+2025-06-04 16:00:57,667 - INFO - Coluna tribe_norm não encontrada, criando...
+2025-06-04 16:00:57,672 - INFO - Tribos disponíveis (normalizadas): ['abastece', 'atendimento', 'beneficios', 'colaborador', 'condominios', 'drive', 'estacione', 'fintech', 'fuel', 'habilitador', 'insurtech', 'jv caixa', 'mx', 'ofertas sinergicas', 'pool', 'sem parar mais', 'sempararcom', 'super app', 'tag', 'urbano', 'vale pedagio', 'vendas']
+2025-06-04 16:00:57,675 - INFO - Registros após filtro de tribo: 71
+2025-06-04 16:00:57,675 - INFO - Métricas da Tribo Vendas: {'lead_time': {'media': 0.0, 'mediana': 0.0, 'max': 0.0}, 'throughput': {'media_diaria': 0.0, 'total_periodo': 0}, 'wip': {'atual': 0, 'medio': 0.0}, 'qualidade': {'bugs_ratio': 0.0, 'retrabalho': 0.0}}
+2025-06-04 17:12:24,226 - INFO - Python path: ['E:\\Projeto\\Agente_Insights', 'E:\\Projeto\\Agente_Insights', 'C:\\Python313\\python313.zip', 'C:\\Python313\\DLLs', 'C:\\Python313\\Lib', 'C:\\Python313', 'E:\\Projeto\\Agente_Insights\\env', 'E:\\Projeto\\Agente_Insights\\env\\Lib\\site-packages']
+2025-06-04 17:12:25,084 - DEBUG - matplotlib data path: E:\Projeto\Agente_Insights\env\Lib\site-packages\matplotlib\mpl-data
+2025-06-04 17:12:25,089 - DEBUG - CONFIGDIR=C:\Users\b3Y0\.matplotlib
+2025-06-04 17:12:25,090 - DEBUG - interactive is False
+2025-06-04 17:12:25,090 - DEBUG - platform is win32
+2025-06-04 17:12:25,144 - DEBUG - CACHEDIR=C:\Users\b3Y0\.matplotlib
+2025-06-04 17:12:25,147 - DEBUG - Using fontManager instance from C:\Users\b3Y0\.matplotlib\fontlist-v390.json
+2025-06-04 17:12:25,903 - INFO - Módulos importados com sucesso!
+2025-06-04 17:12:25,903 - INFO - Iniciando teste da tribo Vendas...
+2025-06-04 17:12:26,450 - DEBUG - Colunas em maturidade: ['Chave_Tribo_Ano_Quarter', 'Chave_Tribo_Ano_Quarter_Psq_Maturidade', 'ID_Formulario', 'Ano', 'Quarter', 'ID_Tribo_Alocacao', 'Tribo', 'Maturidade']
+2025-06-04 17:12:26,450 - DEBUG - Colunas em alocacao: ['allocationId', 'number', 'person', 'personID', 'personEmail', 'tribeID', 'tribe', 'squadID', 'squad', 'role', 'roleID', 'percetageAllocation', 'startDate', 'endDate', 'active', 'type', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy']
+2025-06-04 17:12:26,451 - DEBUG - Colunas em executivo: []
+2025-06-04 17:12:26,451 - DEBUG - Tipo de retorno de carregar_dados: <class 'dict'>
+2025-06-04 17:12:26,451 - DEBUG - Chaves no dicionário: dict_keys(['maturidade', 'alocacao', 'executivo'])
+2025-06-04 17:12:26,452 - DEBUG - DataFrame alocacao: (1014, 20) registros
+2025-06-04 17:12:26,452 - DEBUG - Colunas alocacao: ['allocationId', 'number', 'person', 'personID', 'personEmail', 'tribeID', 'tribe', 'squadID', 'squad', 'role', 'roleID', 'percetageAllocation', 'startDate', 'endDate', 'active', 'type', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy']
+2025-06-04 17:12:26,452 - INFO - Tribos disponíveis: ['Habilitador' 'Semparar.com' 'Benefícios' 'Atendimento' 'Insurtech'
+ 'Super App' 'Tag' 'Fuel' 'Estacione' 'Abastece' 'Condomínios'
+ 'Sem Parar Mais' 'Vendas' 'MX' 'Urbano' 'Fintech' 'Colaborador'
+ 'Vale Pedágio' 'Ofertas Sinérgicas' 'Drive' 'Pool' 'JV - Caixa']
+2025-06-04 17:12:26,453 - DEBUG - Tribos normalizadas: ['habilitador', 'semparar.com', 'benefícios', 'atendimento', 'insurtech', 'super app', 'tag', 'fuel', 'estacione', 'abastece', 'condomínios', 'sem parar mais', 'vendas', 'mx', 'urbano', 'fintech', 'colaborador', 'vale pedágio', 'ofertas sinérgicas', 'drive', 'pool', 'jv - caixa']
+2025-06-04 17:12:26,453 - INFO - Tribo Vendas encontrada como 'Vendas'. Executando análise...
+2025-06-04 17:12:26,453 - INFO - Criando coluna tribe_norm para filtragem consistente
+2025-06-04 17:12:26,456 - INFO - Buscando por tribo normalizada: 'vendas'
+2025-06-04 17:12:26,457 - INFO - Filtrando por tribe_norm = 'vendas'
+2025-06-04 17:12:26,457 - INFO - Registros após filtro de tribo: 71
+2025-06-04 17:12:26,459 - INFO - Registros após filtro de data: 31
+2025-06-04 17:12:26,459 - INFO - Coluna de percentual de alocação encontrada: percetageAllocation
+2025-06-04 17:12:26,459 - INFO - Processando coluna percetageAllocation
+2025-06-04 17:12:26,459 - INFO - Amostras de valores antes da conversão: ['100%', '100%', '20%', '100%', '100%']
+2025-06-04 17:12:26,460 - INFO - Valores após limpeza: ['100', '15', '20']
+2025-06-04 17:12:26,461 - INFO - Valores de percentual: min=15, max=100, mean=80.80645161290323
+2025-06-04 17:12:26,461 - INFO - Convertendo percentuais para decimal (0-1)
+2025-06-04 17:12:26,461 - INFO - Valores após normalização: min=0.15, max=1.0, mean=0.8080645161290323
+2025-06-04 17:12:26,467 - DEBUG - Análise de alocação: {'papeis': {'Agile Coach': 1, 'Agile Master': 1, 'Analista CRO': 2, 'Analista Designer': 1, 'Analista de Dados': 2, 'Analista de Marketing Digital': 1, 'Analista de Mídia Performance': 3, 'Analista de vendas Online': 1, 'Coordenador': 1, 'Desenvolvedor Frontend': 2, 'Desenvolvedor Fullstack': 4, 'Digital Analytics': 2, 'Engenheiro de Dados': 1, 'Especialista de Mídia e Dados': 1, 'Gerente Performance': 1, 'PO da Squad': 2, 'PO da Tribo': 1, 'QA': 2, 'Team Leader': 1, 'Ux writer': 1}, 'media_pessoas_squad': 10.0, 'pessoas_multi_squad': ['Marcus Vinicius Campos Da Silva'], 'alocacao_media': {'Pandas': 0.8400000000000001, 'Pixel': 0.7423076923076923, 'Vendas e Logística (Capivaras)': 0.9166666666666666}, 'composicao_squads': {'role': {'Pandas': {'Engenheiro de Dados': 1, 'Digital Analytics': 2, 'Analista de Dados': 1, 'Team Leader': 1}, 'Pixel': {'Analista de vendas Online': 1, 'Analista CRO': 2, 'Especialista de Mídia e Dados': 1, 'Analista de Mídia Performance': 3, 'Gerente Performance': 1, 'Analista Designer': 1, 'Analista de Marketing Digital': 1, 'Coordenador': 1, 'Analista de Dados': 1, 'Ux writer': 1}, 'Vendas e Logística (Capivaras)': {'PO da Tribo': 1, 'Desenvolvedor Frontend': 2, 'PO da Squad': 2, 'QA': 2, 'Desenvolvedor Fullstack': 4, 'Agile Master': 1}}, 'percetageAllocation': {'Pandas': 0.8400000000000001, 'Pixel': 0.7423076923076923, 'Vendas e Logística (Capivaras)': 0.9166666666666666}}}
+2025-06-04 17:12:26,467 - INFO - Colunas disponíveis: ['allocationId', 'number', 'person', 'personID', 'personEmail', 'tribeID', 'tribe', 'squadID', 'squad', 'role', 'roleID', 'percetageAllocation', 'startDate', 'endDate', 'active', 'type', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy']
+2025-06-04 17:12:26,468 - INFO - Total registros inicial: 1014
+2025-06-04 17:12:26,468 - INFO - Tribo buscada (normalizada): 'vendas'
+2025-06-04 17:12:26,468 - INFO - Coluna tribe_norm não encontrada, criando...
+2025-06-04 17:12:26,471 - INFO - Tribos disponíveis (normalizadas): ['abastece', 'atendimento', 'beneficios', 'colaborador', 'condominios', 'drive', 'estacione', 'fintech', 'fuel', 'habilitador', 'insurtech', 'jv caixa', 'mx', 'ofertas sinergicas', 'pool', 'sem parar mais', 'sempararcom', 'super app', 'tag', 'urbano', 'vale pedagio', 'vendas']
+2025-06-04 17:12:26,471 - INFO - Registros após filtro de tribo: 71
+2025-06-04 17:12:26,471 - DEBUG - Buscando correspondências exatas para colunas
+2025-06-04 17:12:26,472 - DEBUG - Correspondência exata encontrada: issue_type -> type
+2025-06-04 17:12:26,472 - DEBUG - Correspondência exata encontrada: squad -> squad
+2025-06-04 17:12:26,472 - DEBUG - Correspondência exata encontrada: tribe -> tribe
+2025-06-04 17:12:26,472 - DEBUG - Correspondência parcial encontrada: data -> startDate
+2025-06-04 17:12:26,472 - DEBUG - Correspondência parcial encontrada: issue_id -> allocationId
+2025-06-04 17:12:26,473 - INFO - Coluna mapeada: issue_type -> type
+2025-06-04 17:12:26,473 - INFO - Coluna mapeada: squad -> squad
+2025-06-04 17:12:26,473 - INFO - Coluna mapeada: tribe -> tribe
+2025-06-04 17:12:26,473 - INFO - Coluna mapeada: data -> startDate
+2025-06-04 17:12:26,473 - INFO - Coluna mapeada: issue_id -> allocationId
+2025-06-04 17:12:26,473 - WARNING - Colunas não encontradas: {'cycle_time', 'status', 'lead_time'}
+2025-06-04 17:12:26,473 - DEBUG - Todas as colunas disponíveis: ['allocationId', 'number', 'person', 'personID', 'personEmail', 'tribeID', 'tribe', 'squadID', 'squad', 'role', 'roleID', 'percetageAllocation', 'startDate', 'endDate', 'active', 'type', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'tribe_norm']
+2025-06-04 17:12:26,473 - INFO - Mapeamento de colunas: {'issue_type': 'type', 'squad': 'squad', 'tribe': 'tribe', 'data': 'startDate', 'issue_id': 'allocationId'}
+2025-06-04 17:12:26,474 - ERROR - Erro ao analisar métricas ágeis: cannot access local variable 'throughput_diario' where it is not associated with a value
+2025-06-04 17:12:26,475 - INFO - Métricas da Tribo Vendas: {'lead_time': {'media': 0.0, 'mediana': 0.0, 'max': 0.0}, 'throughput': {'media_diaria': 0.0, 'total_periodo': 0}, 'wip': {'atual': 0, 'medio': 0.0}, 'qualidade': {'bugs_ratio': 0.0, 'retrabalho': 0.0}, 'erro': "cannot access local variable 'throughput_diario' where it is not associated with a value"}
